@@ -15,7 +15,7 @@ type Account struct {
 	Active         bool            `json:"active" gorm:"column:active;type:boolean;default:false"`
 	FcmToken       string          `json:"fcm_token" gorm:"column:fcm_token;type:varchar"`
 	CreatedAt      time.Time       `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
-	UpdatedAt      *time.Time      `json:"updated_at" gorm:"column:updated_at;autoUpdateTime;default:null"`
+	UpdatedAt      *time.Time      `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 	UserPassHashed *UserPassHashed `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
@@ -25,7 +25,7 @@ type UserPassHashed struct {
 	AccountId  uuid.UUID  `json:"account_id" gorm:"not null;column:account_id;type:uuid"`
 	PassHashed string     `json:"pass_hashed" gorm:"not null;column:pass_hashed;type:varchar"`
 	CreatedAt  time.Time  `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
-	UpdatedAt  *time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime;default:null"`
+	UpdatedAt  *time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (account *Account) BeforeCreate() (err error) {
