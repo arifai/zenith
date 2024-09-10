@@ -24,7 +24,7 @@ func ConnectDatabase(config config.Config) *gorm.DB {
 
 	sqlDb, dbErr := db.DB()
 	if dbErr != nil {
-		log.Fatalf("Failed to connect to database: %v", dbErr)
+		log.Fatalf("Failed to get database instance: %v", dbErr)
 	}
 
 	sqlDb.SetMaxIdleConns(10)
