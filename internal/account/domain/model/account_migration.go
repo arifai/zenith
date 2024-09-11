@@ -10,7 +10,7 @@ import (
 // AccountMigration will create the account table and insert the initial data
 func AccountMigration(db *gorm.DB) {
 	err := db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Debug().AutoMigrate(&Account{}, &UserPassHashed{})
+		err := tx.Debug().AutoMigrate(&Account{}, &AccountPassHashed{})
 		if err != nil {
 			return err
 		}
@@ -24,12 +24,12 @@ func AccountMigration(db *gorm.DB) {
 		}
 
 		p := crypto.Argon2IdHash{Time: 1, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 16}
-		hashSalt, err := crypto.GenerateHash(p, []byte("12345678"), nil)
+		hashSalt, err := p.GenerateHash([]byte("12345678"), nil)
 		if err != nil {
 			return err
 		}
 
-		userPassHashed := &UserPassHashed{
+		userPassHashed := &AccountPassHashed{
 			AccountId:  account.ID,
 			PassHashed: hashSalt,
 		}
