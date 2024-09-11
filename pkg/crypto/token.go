@@ -41,9 +41,8 @@ func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) str
 }
 
 // VerifyToken function to verify token
-func (t *TokenPayload) VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPayload, error) {
+func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPayload, error) {
 	parser := paseto.NewParser()
-	parser.AddRule(paseto.Subject(t.AccountId.String()))
 	parser.AddRule(paseto.NotBeforeNbf())
 	parser.AddRule(paseto.ValidAt(time.Now()))
 

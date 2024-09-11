@@ -2,7 +2,7 @@ package crypto
 
 import (
 	"aidanwoods.dev/go-paseto"
-	"github.com/arifai/go-modular-monolithic/pkg/crypto"
+	crp "github.com/arifai/go-modular-monolithic/pkg/crypto"
 	"github.com/google/uuid"
 	"testing"
 	"time"
@@ -11,7 +11,7 @@ import (
 var (
 	u         = uuid.New()
 	tn        = time.Now()
-	mockToken = crypto.TokenPayload{
+	mockToken = crp.TokenPayload{
 		Jti:       u,
 		AccountId: u,
 		IssuedAt:  tn,
@@ -87,7 +87,7 @@ func TestVerifyToken(t *testing.T) {
 	tolerance := time.Second
 
 	t.Run("ValidToken", func(t *testing.T) {
-		parsedPayload, err := mockToken.VerifyToken(token, publicKey)
+		parsedPayload, err := crp.VerifyToken(token, publicKey)
 		if err != nil {
 			t.Fatalf("Failed to verify valid token: %v", err)
 		}
@@ -114,7 +114,7 @@ func TestVerifyToken(t *testing.T) {
 	})
 
 	t.Run("ExpiredToken", func(t *testing.T) {
-		expiredPayload := &crypto.TokenPayload{
+		expiredPayload := &crp.TokenPayload{
 			Jti:       u,
 			AccountId: u,
 			IssuedAt:  tn.Add(-48 * time.Hour),
@@ -123,7 +123,7 @@ func TestVerifyToken(t *testing.T) {
 		}
 		expiredToken := expiredPayload.GenerateToken(secretKey)
 
-		_, err := mockToken.VerifyToken(expiredToken, publicKey)
+		_, err := crp.VerifyToken(expiredToken, publicKey)
 		if err == nil {
 			t.Fatal("Expected an error when verifying expired token, but got none")
 		}
@@ -133,7 +133,7 @@ func TestVerifyToken(t *testing.T) {
 		invalidSecretKey := paseto.NewV4AsymmetricSecretKey()
 		invalidToken := mockToken.GenerateToken(invalidSecretKey)
 
-		_, err := mockToken.VerifyToken(invalidToken, publicKey)
+		_, err := crp.VerifyToken(invalidToken, publicKey)
 		if err == nil {
 			t.Fatal("Expected an error when verifying a token with an invalid signature, but got none")
 		}
@@ -142,7 +142,7 @@ func TestVerifyToken(t *testing.T) {
 	t.Run("MalformedToken", func(t *testing.T) {
 		malformedToken := "this.is.not.a.valid.token"
 
-		_, err := mockToken.VerifyToken(malformedToken, publicKey)
+		_, err := crp.VerifyToken(malformedToken, publicKey)
 		if err == nil {
 			t.Fatal("Expected an error when verifying malformed token, but got none")
 		}
