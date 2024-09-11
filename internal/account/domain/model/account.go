@@ -28,18 +28,6 @@ type AccountPassHashed struct {
 	UpdatedAt  *time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 }
 
-func (a *Account) BeforeCreate() (err error) {
-	a.ID = uuid.New()
-
-	return
-}
-
-func (a *AccountPassHashed) BeforeCreate() (err error) {
-	a.ID = uuid.New()
-
-	return
-}
-
 // CreateAccount creates a new account and handles its association with AccountPassHashed
 func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	tx := db.Begin()
