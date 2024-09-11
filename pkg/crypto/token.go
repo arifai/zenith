@@ -9,19 +9,10 @@ import (
 
 // TokenPayload struct to hold token payload
 type TokenPayload struct {
-	// Jti is the unique identifier of the token
-	Jti uuid.UUID
-
-	// AccountId is the unique identifier of the account. This AccountId will insert into the 'sub' field
+	Jti       uuid.UUID
 	AccountId uuid.UUID
-
-	// IssuedAt is the time when the token is issued
-	IssuedAt time.Time
-
-	// NotBefore is the time when the token is valid
+	IssuedAt  time.Time
 	NotBefore time.Time
-
-	// ExpiresAt is the time when the token is expired
 	ExpiresAt time.Time
 }
 

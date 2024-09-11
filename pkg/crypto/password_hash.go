@@ -12,19 +12,10 @@ import (
 
 // Argon2IdHash is a struct that represents the argon2id hash
 type Argon2IdHash struct {
-	// Time is the time in seconds
-	Time uint32
-
-	// Memory is the memory in kilobytes
-	Memory uint32
-
-	// Threads is the threads used
+	Time    uint32
+	Memory  uint32
 	Threads uint8
-
-	// KeyLen is the key length in bytes
-	KeyLen uint32
-
-	// SaltLen is the salt length in bytes
+	KeyLen  uint32
 	SaltLen uint32
 }
 
