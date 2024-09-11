@@ -30,30 +30,30 @@ type Argon2IdHash struct {
 
 // GenerateHash will generate a hash and salt,
 // the hash is generated using argon2id algorithm
-func GenerateHash(param Argon2IdHash, password, salt []byte) (string, error) {
+func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	var err error
 
-	if len(salt) > 0 && uint32(len(salt)) != param.SaltLen {
-		return "", fmt.Errorf("salt length is incorrect: expected %d bytes, got %d bytes", param.SaltLen, len(salt))
+	if len(salt) > 0 && uint32(len(salt)) != a.SaltLen {
+		return "", fmt.Errorf("salt length is incorrect: expected %d bytes, got %d bytes", a.SaltLen, len(salt))
 	}
 
 	if len(salt) == 0 {
-		salt, err = generateBytes(param.SaltLen)
+		salt, err = generateBytes(a.SaltLen)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	hash := argon2.IDKey(password, salt, param.Time, param.Memory, param.Threads, param.KeyLen)
+	hash := argon2.IDKey(password, salt, a.Time, a.Memory, a.Threads, a.KeyLen)
 	base64Salt := base64.StdEncoding.EncodeToString(salt)
 	base64Hash := base64.StdEncoding.EncodeToString(hash)
-	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, param.Memory, param.Time, param.Threads, base64Salt, base64Hash)
+	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, a.Memory, a.Time, a.Threads, base64Salt, base64Hash)
 
 	return encodedHash, nil
 }
 
-// Verify will verify the password with the encoded hash
-func Verify(password, encodedHash string) (bool, error) {
+// VerifyHash will verify the password with the encoded hash
+func VerifyHash(password, encodedHash string) (bool, error) {
 	a, salt, hash, err := decodeHash(encodedHash)
 	if err != nil {
 		return false, err
