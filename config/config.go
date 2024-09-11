@@ -1,6 +1,7 @@
 package config
 
 import (
+	"aidanwoods.dev/go-paseto"
 	"github.com/Netflix/go-env"
 	"github.com/joho/godotenv"
 	"log"
@@ -16,6 +17,11 @@ type Config struct {
 	SslMode          string `env:"SSL_MODE"`
 	Timezone         string `env:"TIMEZONE"`
 }
+
+var (
+	SecretKey = paseto.NewV4AsymmetricSecretKey()
+	PublicKey = SecretKey.Public()
+)
 
 // Load function to load environment variables
 func Load(filenames ...string) (config Config) {
