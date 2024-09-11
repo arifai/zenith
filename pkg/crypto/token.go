@@ -12,7 +12,7 @@ type TokenPayload struct {
 	// Jti is the unique identifier of the token
 	Jti uuid.UUID
 
-	// AccountId is the unique identifier of the account
+	// AccountId is the unique identifier of the account. This AccountId will insert into the 'sub' field
 	AccountId uuid.UUID
 
 	// IssuedAt is the time when the token is issued
