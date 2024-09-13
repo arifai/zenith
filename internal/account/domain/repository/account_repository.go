@@ -65,3 +65,16 @@ func (repo *AccountRepository) FindByEmail(email string) (*model.Account, error)
 
 	return founded, nil
 }
+
+// Update updates an account
+func (repo *AccountRepository) Update(id uuid.UUID, payload *types.UpdateAccountRequest) (*model.Account, error) {
+	founded, err := repo.Find(id)
+	if err != nil {
+		return nil, err
+	}
+
+	founded.FullName = payload.FullName
+	founded.Email = payload.Email
+
+	return founded.Update(repo.db)
+}

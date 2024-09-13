@@ -39,3 +39,12 @@ func (s *AccountService) GetAccount(ctx *core.Context) (m *model.Account, err er
 
 	return currentAccount, nil
 }
+
+// UpdateAccount updates an account
+func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.UpdateAccountRequest) (m *model.Account, err error) {
+	currentAccount, err := s.GetAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.Update(currentAccount.ID, payload)
+}

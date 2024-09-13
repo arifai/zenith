@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -31,6 +32,7 @@ type AccountPassHashed struct {
 // CreateAccount creates a new account and handles its association with AccountPassHashed
 func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	tx := db.Begin()
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -39,7 +41,6 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 
 	if err := tx.FirstOrCreate(a, Account{Email: a.Email}).Error; err != nil {
 		tx.Rollback()
-
 		return nil, err
 	}
 
@@ -60,7 +61,7 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 
 // FindByID finds an Account by its ID
 func (a *Account) FindByID(db *gorm.DB, id uuid.UUID) (*Account, error) {
-	if err := db.Find(a, id).Error; err != nil {
+	if err := db.First(a, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -84,4 +85,13 @@ func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// Update updates an Account
+func (a *Account) Update(db *gorm.DB) (*Account, error) {
+	if err := db.Save(a).Clauses(clause.Returning{}).Error; err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }

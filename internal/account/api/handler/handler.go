@@ -62,3 +62,23 @@ func RegisterAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config
 
 	resp.Created(ctx, "", result)
 }
+
+// UpdateAccountHandler is a function to handle the update account handler
+func UpdateAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
+	resp := new(common.Response)
+	accountService := service.NewAccountService(db, config)
+	context := core.NewContext(ctx)
+	body, err := utils.ValidateBody[types.UpdateAccountRequest](ctx)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	result, err := accountService.UpdateAccount(context, body)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	resp.Success(ctx, result)
+}

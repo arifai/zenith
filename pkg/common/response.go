@@ -61,7 +61,7 @@ func NewEntries[T interface{}](entries []T, count, page, totalPages int) *Entrie
 func (r Response) Success(c *gin.Context, result interface{}) {
 	c.JSON(http.StatusOK, ResponseModel{
 		Code:    http.StatusOK,
-		Message: "",
+		Message: "Successful",
 		Errors:  []utils.IError{},
 		Result:  result,
 	})
