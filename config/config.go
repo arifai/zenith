@@ -16,6 +16,7 @@ type Config struct {
 	DatabasePassword string `env:"DB_PASSWORD"`
 	SslMode          string `env:"SSL_MODE"`
 	Timezone         string `env:"TIMEZONE"`
+	PasswordSalt     string `env:"PASSWORD_SALT"`
 }
 
 var (
