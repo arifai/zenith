@@ -43,3 +43,22 @@ func GetAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 
 	resp.Success(ctx, result)
 }
+
+// RegisterAccountHandler is a function to handle the register account handler
+func RegisterAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
+	resp := new(common.Response)
+	accountService := service.NewAccountService(db, config)
+	body, err := utils.ValidateBody[types.CreateAccountRequest](ctx)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	result, err := accountService.CreateAccount(body)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	resp.Created(ctx, "", result)
+}

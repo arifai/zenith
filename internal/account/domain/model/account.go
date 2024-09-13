@@ -45,9 +45,8 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 
 	if a.AccountPassHashed != nil {
 		a.AccountPassHashed.AccountId = a.ID
-		if err := tx.Create(a.AccountPassHashed).Error; err != nil {
+		if err := tx.Where(AccountPassHashed{AccountId: a.ID}).FirstOrCreate(a.AccountPassHashed).Error; err != nil {
 			tx.Rollback()
-
 			return nil, err
 		}
 	}
@@ -78,13 +77,11 @@ func (a *Account) FindByEmail(db *gorm.DB, email string) (*Account, error) {
 }
 
 // EmailExists checks if an email already exists in the database
-func (a *Account) EmailExists(db *gorm.DB, email string) (*Account, error) {
+func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 	var count int64
-	if err := db.Where(&Account{Email: email}).Count(&count).Error; err != nil {
-		return nil, err
-	} else if count > 0 {
-		return nil, err
+	if err := db.Model(&Account{}).Where(&Account{Email: email}).Count(&count).Error; err != nil {
+		return false, err
 	}
 
-	return a, nil
+	return count > 0, nil
 }

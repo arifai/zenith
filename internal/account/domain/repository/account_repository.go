@@ -5,7 +5,7 @@ import (
 	"github.com/arifai/go-modular-monolithic/config"
 	"github.com/arifai/go-modular-monolithic/internal/account/api/types"
 	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
+	"github.com/arifai/go-modular-monolithic/internal/errors"
 	crp "github.com/arifai/go-modular-monolithic/pkg/crypto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -22,9 +22,11 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 // CreateAccount creates a new account
 func (repo *AccountRepository) CreateAccount(payload *types.CreateAccountRequest) (*model.Account, error) {
 	m := new(model.Account)
-	_, err := m.EmailExists(repo.db, payload.Email)
+	exists, err := m.EmailExists(repo.db, payload.Email)
 	if err != nil {
-		return nil, errmsg.ErrEmailAlreadyExists
+		return nil, err
+	} else if exists {
+		return nil, errors.ErrEmailAlreadyExists
 	}
 
 	hash := crp.Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}

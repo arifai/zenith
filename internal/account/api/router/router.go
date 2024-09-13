@@ -10,9 +10,13 @@ import (
 
 // AccountRouter is a function to handle the account router
 func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config) {
-	accountGroup := group.Group("/account")
+	authGroup := group.Group("/auth")
+	accountGroup := authGroup.Group("/account")
 	accountGroup.POST("/authorization", func(c *gin.Context) {
 		handler.AuthHandler(c, db, config)
+	})
+	accountGroup.POST("/registration", func(c *gin.Context) {
+		handler.RegisterAccountHandler(c, db, config)
 	})
 	accountGroup.GET("/me", middleware.Middleware(db), func(c *gin.Context) {
 		handler.GetAccountHandler(c, db, config)
