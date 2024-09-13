@@ -16,7 +16,7 @@ type Account struct {
 	FcmToken          string             `json:"fcm_token" gorm:"column:fcm_token;type:varchar"`
 	CreatedAt         time.Time          `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
 	UpdatedAt         *time.Time         `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
-	AccountPassHashed *AccountPassHashed `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	AccountPassHashed *AccountPassHashed `json:"-" gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // AccountPassHashed is a struct that represent the user_pass_hashed model
@@ -53,6 +53,36 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// FindByID finds an Account by its ID
+func (a *Account) FindByID(db *gorm.DB, id uuid.UUID) (*Account, error) {
+	if err := db.Find(a, id).Error; err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// FindByEmail finds an Account by its email
+func (a *Account) FindByEmail(db *gorm.DB, email string) (*Account, error) {
+	if err := db.Where(&Account{Email: email}).Preload("AccountPassHashed").First(a).Error; err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// EmailExists checks if an email already exists in the database
+func (a *Account) EmailExists(db *gorm.DB, email string) (*Account, error) {
+	var count int64
+	if err := db.Where(&Account{Email: email}).Count(&count).Error; err != nil {
+		return nil, err
+	} else if count > 0 {
 		return nil, err
 	}
 
