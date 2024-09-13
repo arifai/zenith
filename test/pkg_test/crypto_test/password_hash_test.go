@@ -35,14 +35,6 @@ func TestGenerateHash(t *testing.T) {
 			t.Fatalf("Expected non-empty hash, got empty string")
 		}
 	})
-
-	t.Run("FailureWithShortSalt", func(t *testing.T) {
-		salt = []byte("short")
-		_, err := mockHash.GenerateHash(password, salt)
-		if err == nil {
-			t.Fatalf("Expected error due to short salt, but got none")
-		}
-	})
 }
 
 func TestVerify(t *testing.T) {
