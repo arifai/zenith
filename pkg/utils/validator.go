@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"fmt"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
 	"github.com/gin-gonic/gin"
 	locale "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -39,7 +38,7 @@ func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
 	if err := ctx.ShouldBindJSON(body); err != nil {
 		if errors.Is(err, io.EOF) {
-			return nil, []IError{{Value: CapitalizeFirstLetter(errmsg.ErrCannotParseRequestText)}}
+			return nil, []IError{}
 		}
 		return nil, []IError{{Value: CapitalizeFirstLetter(err.Error())}}
 	}
@@ -54,7 +53,7 @@ func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 // ValidateQuery is a function to validate query
 func ValidateQuery[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
-	if err := ctx.BindQuery(body); err != nil {
+	if err := ctx.ShouldBindQuery(body); err != nil {
 		return nil, []IError{{Value: CapitalizeFirstLetter(err.Error())}}
 	}
 
