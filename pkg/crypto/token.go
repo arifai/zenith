@@ -2,8 +2,10 @@ package crypto
 
 import (
 	"aidanwoods.dev/go-paseto"
-	"fmt"
+	"errors"
+	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
@@ -14,6 +16,7 @@ type TokenPayload struct {
 	IssuedAt  time.Time
 	NotBefore time.Time
 	ExpiresAt time.Time
+	TokenType string
 }
 
 // GenerateToken function to generate token
@@ -25,6 +28,7 @@ func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) str
 	token.SetIssuedAt(t.IssuedAt)
 	token.SetNotBefore(t.NotBefore)
 	token.SetExpiration(t.ExpiresAt)
+	token.SetFooter([]byte(t.TokenType))
 
 	signed := token.V4Sign(secretKey, nil)
 
@@ -37,47 +41,71 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	parser.AddRule(paseto.NotBeforeNbf())
 	parser.AddRule(paseto.ValidAt(time.Now()))
 
-	parsed, err := parser.ParseV4Public(publicKey, token, nil)
+	pubKeyHex, err := paseto.NewV4AsymmetricPublicKeyFromHex(publicKey.ExportHex())
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedParsePublicHexText, err)
+		return nil, err
+	}
+
+	parsed, err := parser.ParseV4Public(pubKeyHex, token, nil)
+	if err != nil {
+		log.Printf("%s: %v", errmsg.ErrFailedParseTokenText, err)
+		return nil, errors.New(errmsg.ErrInvalidAccessTokenText)
 	}
 
 	jtiString, err := parsed.GetJti()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get 'jti': %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedGetJTIText, err)
+		return nil, err
 	}
 
 	jti, err := uuid.Parse(jtiString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse jti string: %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedParseJTIText, err)
+		return nil, err
 	}
 
 	accountIdString, err := parsed.GetSubject()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get 'sub': %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedGetSubText, err)
+		return nil, err
 	}
 
 	accountId, err := uuid.Parse(accountIdString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse account id string: %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedParseACIText, err)
+		return nil, err
 	}
 
 	issuedAt, err := parsed.GetIssuedAt()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get 'iat': %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedGetIATText, err)
+		return nil, err
 	}
 
 	notBefore, err := parsed.GetNotBefore()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get 'nbf': %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedGetNBFText, err)
+		return nil, err
 	}
 
 	exp, err := parsed.GetExpiration()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get 'exp': %w", err)
+		log.Printf("%s: %v", errmsg.ErrFailedGetEXPText, err)
+		return nil, err
+	} else if exp.Before(time.Now()) {
+		log.Printf("%s: %v", errmsg.ErrTokenExpiredText, err)
+		return nil, err
 	}
 
-	tokenPayload := &TokenPayload{Jti: jti, AccountId: accountId, IssuedAt: issuedAt, NotBefore: notBefore, ExpiresAt: exp}
+	tokenPayload := &TokenPayload{
+		Jti:       jti,
+		AccountId: accountId,
+		IssuedAt:  issuedAt,
+		NotBefore: notBefore,
+		ExpiresAt: exp,
+		TokenType: string(parsed.Footer()),
+	}
 
 	return tokenPayload, nil
 }

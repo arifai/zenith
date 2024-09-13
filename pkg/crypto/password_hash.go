@@ -4,9 +4,10 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
-	"errors"
 	"fmt"
+	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
 	"golang.org/x/crypto/argon2"
+	"log"
 	"strings"
 )
 
@@ -20,12 +21,13 @@ type Argon2IdHash struct {
 }
 
 // GenerateHash will generate a hash and salt,
-// the hash is generated using argon2id algorithm
+// the hash is generated using Argon2ID algorithm
 func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	var err error
 
 	if len(salt) > 0 && uint32(len(salt)) != a.SaltLen {
-		return "", fmt.Errorf("salt length is incorrect: expected %d bytes, got %d bytes", a.SaltLen, len(salt))
+		log.Printf("salt length is incorrect: expected %d bytes, got %d bytes", a.SaltLen, len(salt))
+		return "", err
 	}
 
 	if len(salt) == 0 {
@@ -74,14 +76,13 @@ func generateBytes(length uint32) ([]byte, error) {
 func decodeHash(encodedHash string) (a *Argon2IdHash, salt, hash []byte, err error) {
 	value := strings.Split(encodedHash, "$")
 	if len(value) != 6 {
-		err = fmt.Errorf("invalid encoded hash")
-		return nil, nil, nil, errors.New("invalid encoded hash")
+		return nil, nil, nil, errmsg.ErrInvalidEncodedHash
 	}
 
 	var version int
 	_, err = fmt.Sscanf(value[2], "v=%d", &version)
 	if err != nil {
-		return nil, nil, nil, errors.New("incompatible Argon2 version")
+		return nil, nil, nil, errmsg.ErrIncompatibleArgon2Version
 	}
 
 	a = &Argon2IdHash{}
