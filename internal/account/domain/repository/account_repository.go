@@ -5,8 +5,8 @@ import (
 	"github.com/arifai/go-modular-monolithic/config"
 	"github.com/arifai/go-modular-monolithic/internal/account/api/types"
 	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
-	"github.com/arifai/go-modular-monolithic/internal/errors"
 	crp "github.com/arifai/go-modular-monolithic/pkg/crypto"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -20,15 +20,15 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 }
 
 // CreateAccount registers a new user account in the system using the provided payload data. The payload must contain
-// full name, email, and password. If the email already exists in the database, it returns an errors.ErrEmailAlreadyExists error.
-// Passwords are hashed using Argon2ID hashing algorithm before saving. Returns the created model.Account or any errors encountered.
+// full name, email, and password. If the email already exists in the database, it returns an errormessage.ErrEmailAlreadyExists error.
+// Passwords are hashed using Argon2ID hashing algorithm before saving. Returns the created model.Account or any errormessage encountered.
 func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
 	m := new(model.Account)
 	exists, err := m.EmailExists(repo.db, payload.Email)
 	if err != nil {
 		return nil, err
 	} else if exists {
-		return nil, errors.ErrEmailAlreadyExists
+		return nil, errormessage.ErrEmailAlreadyExists
 	}
 
 	generateHash, err := crp.DefaultArgon2IDHash.GenerateHash([]byte(payload.Password), []byte(config.Load().PasswordSalt))
@@ -96,7 +96,7 @@ func (repo *AccountRepository) UpdatePassword(id uuid.UUID, payload *types.Accou
 	if err != nil {
 		return nil, err
 	} else if !verifyHash {
-		return nil, errors.ErrWrongOldPassword
+		return nil, errormessage.ErrWrongOldPassword
 	} else {
 		generateHash, err := crp.DefaultArgon2IDHash.GenerateHash([]byte(payload.NewPassword), []byte(config.Load().PasswordSalt))
 		if err != nil {

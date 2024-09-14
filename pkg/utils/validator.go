@@ -68,7 +68,7 @@ func ValidateQuery[T any](ctx *gin.Context) (*T, interface{}) {
 
 }
 
-// validateStruct validates a given struct and returns a slice of IError if validation errors are present.
+// validateStruct validates a given struct and returns a slice of IError if validation errormessage are present.
 func validateStruct(body interface{}) []IError {
 	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
 		name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]

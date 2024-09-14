@@ -3,7 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"github.com/arifai/go-modular-monolithic/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -18,7 +18,7 @@ type (
 	ResponseModel struct {
 		Code    int            `json:"code"`
 		Message string         `json:"message"`
-		Errors  []utils.IError `json:"errors"`
+		Errors  []utils.IError `json:"errormessage"`
 		Result  any            `json:"result"`
 	}
 
@@ -37,7 +37,7 @@ type (
 	}
 )
 
-// New sets the response format and sends a JSON response with HTTP code, message, errors, and result data.
+// New sets the response format and sends a JSON response with HTTP code, message, errormessage, and result data.
 func (r Response) New(c *gin.Context, code int, message string, errors []utils.IError, result interface{}) {
 	c.JSON(code, ResponseModel{
 		Code:    code,
@@ -87,7 +87,7 @@ func (r Response) Authorized(c *gin.Context, result *AuthResponse) {
 	})
 }
 
-// Unauthorized sends an HTTP 401 Unauthorized response with a custom message and a list of errors.
+// Unauthorized sends an HTTP 401 Unauthorized response with a custom message and a list of errormessage.
 func (r Response) Unauthorized(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusUnauthorized, ResponseModel{
 		Code:    http.StatusUnauthorized,
@@ -107,30 +107,30 @@ func NotFound(c *gin.Context, message string) {
 	})
 }
 
-// Error handles different types of errors (string, []utils.IError, error) and responds with appropriate HTTP status.
+// Error handles different types of errormessage (string, []utils.IError, error) and responds with appropriate HTTP status.
 func (r Response) Error(c *gin.Context, errParam interface{}) {
 	switch err := errParam.(type) {
 	case string:
 		fmt.Printf("String error: %v\n", err)
 		r.BadRequest(c, []utils.IError{}, err)
 	case []utils.IError:
-		fmt.Printf("Validation errors: %v\n", err)
-		r.BadRequest(c, err, errmsg.ErrBadRequestText)
+		fmt.Printf("Validation errormessage: %v\n", err)
+		r.BadRequest(c, err, errormessage.ErrBadRequestText)
 	case error:
 		if errors.Is(err, io.EOF) {
 			fmt.Printf("EOF error: %v\n", err)
-			r.BadRequest(c, []utils.IError{}, errmsg.ErrRequestBodyEmptyText)
+			r.BadRequest(c, []utils.IError{}, errormessage.ErrRequestBodyEmptyText)
 		} else {
 			fmt.Printf("Error: %v\n", err)
 			r.BadRequest(c, []utils.IError{}, err.Error())
 		}
 	default:
 		fmt.Printf("Unhandled error type: %T, value: %v\n", err, err)
-		r.InternalServerError(c, errmsg.ErrParsingRequestDataText)
+		r.InternalServerError(c, errormessage.ErrParsingRequestDataText)
 	}
 }
 
-// BadRequest sends an HTTP 400 Bad Request response with a custom message and a list of errors.
+// BadRequest sends an HTTP 400 Bad Request response with a custom message and a list of errormessage.
 func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusBadRequest, ResponseModel{
 		Code:    http.StatusBadRequest,
@@ -140,7 +140,7 @@ func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message stri
 	})
 }
 
-// InternalServerError sends an HTTP 500 Internal Server Error response with a custom message and an empty list of errors.
+// InternalServerError sends an HTTP 500 Internal Server Error response with a custom message and an empty list of errormessage.
 func (r Response) InternalServerError(c *gin.Context, message string) {
 	c.JSON(http.StatusInternalServerError, ResponseModel{
 		Code:    http.StatusInternalServerError,

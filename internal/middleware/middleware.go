@@ -3,9 +3,9 @@ package middleware
 import (
 	"github.com/arifai/go-modular-monolithic/config"
 	"github.com/arifai/go-modular-monolithic/internal/account/domain/repository"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
 	"github.com/arifai/go-modular-monolithic/pkg/common"
 	crp "github.com/arifai/go-modular-monolithic/pkg/crypto"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"github.com/arifai/go-modular-monolithic/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,14 +20,14 @@ func Middleware(db *gorm.DB) gin.HandlerFunc {
 		resp := common.Response{}
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			resp.Unauthorized(c, []utils.IError{}, errmsg.ErrMissingAuthorizationHeaderText)
+			resp.Unauthorized(c, []utils.IError{}, errormessage.ErrMissingAuthorizationHeaderText)
 			c.Abort()
 			return
 		}
 
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			resp.Unauthorized(c, []utils.IError{}, errmsg.ErrInvalidAccessTokenText)
+			resp.Unauthorized(c, []utils.IError{}, errormessage.ErrInvalidAccessTokenText)
 			c.Abort()
 			return
 		}
@@ -40,14 +40,14 @@ func Middleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		if tokenPayload.TokenType != "access_token" {
-			resp.Unauthorized(c, []utils.IError{}, errmsg.ErrInvalidTokenTypeText)
+			resp.Unauthorized(c, []utils.IError{}, errormessage.ErrInvalidTokenTypeText)
 			c.Abort()
 			return
 		}
 
 		account, err := repo.Find(tokenPayload.AccountId)
 		if err != nil {
-			resp.Unauthorized(c, []utils.IError{}, errmsg.ErrCannotFindAuthorizedAccountText)
+			resp.Unauthorized(c, []utils.IError{}, errormessage.ErrCannotFindAuthorizedAccountText)
 			c.Abort()
 			return
 		}

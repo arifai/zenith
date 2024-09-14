@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"golang.org/x/crypto/argon2"
 	"log"
 	"strings"
@@ -83,13 +83,13 @@ func generateBytes(length uint32) ([]byte, error) {
 func decodeHash(encodedHash string) (a *Argon2IdHash, salt, hash []byte, err error) {
 	value := strings.Split(encodedHash, "$")
 	if len(value) != 6 {
-		return nil, nil, nil, errmsg.ErrInvalidEncodedHash
+		return nil, nil, nil, errormessage.ErrInvalidEncodedHash
 	}
 
 	var version int
 	_, err = fmt.Sscanf(value[2], "v=%d", &version)
 	if err != nil {
-		return nil, nil, nil, errmsg.ErrIncompatibleArgon2Version
+		return nil, nil, nil, errormessage.ErrIncompatibleArgon2Version
 	}
 
 	a = &Argon2IdHash{}

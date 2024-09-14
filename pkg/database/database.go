@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 	"github.com/arifai/go-modular-monolithic/config"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -26,12 +26,12 @@ func ConnectDatabase(config config.Config) *gorm.DB {
 		},
 	})
 	if err != nil {
-		log.Fatalf("%s: %v", errmsg.ErrFailedToConnectDBText, err)
+		log.Fatalf("%s: %v", errormessage.ErrFailedToConnectDBText, err)
 	}
 
 	sqlDb, dbErr := db.DB()
 	if dbErr != nil {
-		log.Fatalf("%s: %v", errmsg.ErrFailedGetDBInstanceText, dbErr)
+		log.Fatalf("%s: %v", errormessage.ErrFailedGetDBInstanceText, dbErr)
 	}
 
 	sqlDb.SetMaxIdleConns(10)

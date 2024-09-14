@@ -3,7 +3,7 @@ package crypto
 import (
 	"aidanwoods.dev/go-paseto"
 	"errors"
-	errmsg "github.com/arifai/go-modular-monolithic/internal/errors"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"github.com/google/uuid"
 	"log"
 	"time"
@@ -43,58 +43,58 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 
 	pubKeyHex, err := paseto.NewV4AsymmetricPublicKeyFromHex(publicKey.ExportHex())
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedParsePublicHexText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedParsePublicHexText, err)
 		return nil, err
 	}
 
 	parsed, err := parser.ParseV4Public(pubKeyHex, token, nil)
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedParseTokenText, err)
-		return nil, errors.New(errmsg.ErrInvalidAccessTokenText)
+		log.Printf("%s: %v", errormessage.ErrFailedParseTokenText, err)
+		return nil, errors.New(errormessage.ErrInvalidAccessTokenText)
 	}
 
 	jtiString, err := parsed.GetJti()
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedGetJTIText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedGetJTIText, err)
 		return nil, err
 	}
 
 	jti, err := uuid.Parse(jtiString)
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedParseJTIText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedParseJTIText, err)
 		return nil, err
 	}
 
 	accountIdString, err := parsed.GetSubject()
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedGetSubText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedGetSubText, err)
 		return nil, err
 	}
 
 	accountId, err := uuid.Parse(accountIdString)
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedParseACIText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedParseACIText, err)
 		return nil, err
 	}
 
 	issuedAt, err := parsed.GetIssuedAt()
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedGetIATText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedGetIATText, err)
 		return nil, err
 	}
 
 	notBefore, err := parsed.GetNotBefore()
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedGetNBFText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedGetNBFText, err)
 		return nil, err
 	}
 
 	exp, err := parsed.GetExpiration()
 	if err != nil {
-		log.Printf("%s: %v", errmsg.ErrFailedGetEXPText, err)
+		log.Printf("%s: %v", errormessage.ErrFailedGetEXPText, err)
 		return nil, err
 	} else if exp.Before(time.Now()) {
-		log.Printf("%s: %v", errmsg.ErrTokenExpiredText, err)
+		log.Printf("%s: %v", errormessage.ErrTokenExpiredText, err)
 		return nil, err
 	}
 
