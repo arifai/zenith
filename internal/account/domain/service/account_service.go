@@ -27,7 +27,7 @@ func NewAccountService(db *gorm.DB, config *config.Config) *AccountService {
 
 // CreateAccount registers a new user account in the system using the provided payload data.
 // The payload must contain full name, email, and password. Returns the created model.Account or any error encountered.
-func (s *AccountService) CreateAccount(payload *types.CreateAccountRequest) (*model.Account, error) {
+func (s *AccountService) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
 	return s.repo.CreateAccount(payload)
 }
 
@@ -47,7 +47,7 @@ func (s *AccountService) GetAccount(ctx *core.Context) (m *model.Account, err er
 // UpdateAccount updates the details of the current account using the provided payload.
 // It first retrieves the current account from the context, then updates the account data in the repository.
 // Returns the updated model.Account or an error if encountered.
-func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.UpdateAccountRequest) (m *model.Account, err error) {
+func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.AccountUpdateRequest) (m *model.Account, err error) {
 	currentAccount, err := s.GetAccount(ctx)
 	if err != nil {
 		return nil, err

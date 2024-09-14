@@ -53,7 +53,7 @@ func GetAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 func RegisterAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp := new(common.Response)
 	accountService := service.NewAccountService(db, config)
-	body, err := utils.ValidateBody[types.CreateAccountRequest](ctx)
+	body, err := utils.ValidateBody[types.AccountCreateRequest](ctx)
 	if err != nil {
 		resp.Error(ctx, err)
 		return
@@ -75,7 +75,7 @@ func UpdateAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) 
 	resp := new(common.Response)
 	accountService := service.NewAccountService(db, config)
 	context := core.NewContext(ctx)
-	body, err := utils.ValidateBody[types.UpdateAccountRequest](ctx)
+	body, err := utils.ValidateBody[types.AccountUpdateRequest](ctx)
 	if err != nil {
 		resp.Error(ctx, err)
 		return

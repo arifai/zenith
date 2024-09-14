@@ -22,7 +22,7 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 // CreateAccount registers a new user account in the system using the provided payload data. The payload must contain
 // full name, email, and password. If the email already exists in the database, it returns an errors.ErrEmailAlreadyExists error.
 // Passwords are hashed using Argon2ID hashing algorithm before saving. Returns the created model.Account or any errors encountered.
-func (repo *AccountRepository) CreateAccount(payload *types.CreateAccountRequest) (*model.Account, error) {
+func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
 	m := new(model.Account)
 	exists, err := m.EmailExists(repo.db, payload.Email)
 	if err != nil {
@@ -72,7 +72,7 @@ func (repo *AccountRepository) FindByEmail(email string) (*model.Account, error)
 // Update modifies an existing account with the given id using the provided payload data.
 // If the account is found, its FullName and Email fields are updated and changes are saved in the database.
 // Returns the updated model.Account or an error if any step fails.
-func (repo *AccountRepository) Update(id uuid.UUID, payload *types.UpdateAccountRequest) (*model.Account, error) {
+func (repo *AccountRepository) Update(id uuid.UUID, payload *types.AccountUpdateRequest) (*model.Account, error) {
 	founded, err := repo.Find(id)
 	if err != nil {
 		return nil, err
