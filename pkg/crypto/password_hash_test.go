@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"errors"
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -16,10 +17,10 @@ func (m *MockArgon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-var password = []byte("password")
-var salt = []byte("salt")
+var password = []byte(faker.Password())
+var salt = []byte(faker.Word())
 
-func TestMockArgon2IdHash_GenerateHash(t *testing.T) {
+func TestMockArgon2IdHashGenerateHash(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {

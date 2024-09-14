@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"aidanwoods.dev/go-paseto"
+	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -113,6 +114,69 @@ func TestParseUUID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := parseUUID(tc.input, "Failed to get field", "Failed to parse field")
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGenerateTokenWithFaker(t *testing.T) {
+	mockKey := setupMockKey()
+	jti := uuid.New()
+	accountId := uuid.New()
+	tokenPayload := TokenPayload{
+		Jti:       jti,
+		AccountId: accountId,
+		IssuedAt:  time.Now(),
+		NotBefore: time.Now(),
+		ExpiresAt: time.Now().Add(time.Hour * 1),
+		TokenType: faker.Word(),
+	}
+	token := tokenPayload.GenerateToken(mockKey.ExportHex())
+	assert.NotEmpty(t, token)
+}
+
+func TestVerifyTokenWithFaker(t *testing.T) {
+	mockKey := setupMockKey()
+	validPayload := TokenPayload{
+		Jti:       uuid.New(),
+		AccountId: uuid.New(),
+		IssuedAt:  time.Now(),
+		NotBefore: time.Now(),
+		ExpiresAt: time.Now().Add(time.Hour * 1),
+		TokenType: faker.Word(),
+	}
+	validToken := validPayload.GenerateToken(mockKey.ExportHex())
+
+	testCases := []struct {
+		name        string
+		token       string
+		expectError bool
+	}{
+		{
+			name:        "ValidTokenTest",
+			token:       validToken,
+			expectError: false,
+		},
+		{
+			name:        "InvalidTokenTest",
+			token:       InvalidToken,
+			expectError: true,
+		},
+		{
+			name:        "FakerInvalidTokenTest",
+			token:       faker.UUIDHyphenated(),
+			expectError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer mockKey.AssertExpectations(t)
+			_, err := VerifyToken(tc.token, mockKey.ExportPublicKey())
 			if tc.expectError {
 				assert.Error(t, err)
 			} else {
