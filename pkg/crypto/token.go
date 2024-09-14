@@ -22,17 +22,13 @@ type TokenPayload struct {
 // GenerateToken creates a signed token using the given secret key.
 func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) string {
 	token := paseto.NewToken()
-
 	token.SetJti(t.Jti.String())
 	token.SetSubject(t.AccountId.String())
 	token.SetIssuedAt(t.IssuedAt)
 	token.SetNotBefore(t.NotBefore)
 	token.SetExpiration(t.ExpiresAt)
 	token.SetFooter([]byte(t.TokenType))
-
-	signed := token.V4Sign(secretKey, nil)
-
-	return signed
+	return token.V4Sign(secretKey, nil)
 }
 
 // VerifyToken verifies a given token using the provided public key, and returns the decoded TokenPayload if valid.
@@ -41,59 +37,45 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	parser.AddRule(paseto.NotBeforeNbf())
 	parser.AddRule(paseto.ValidAt(time.Now()))
 
-	pubKeyHex, err := paseto.NewV4AsymmetricPublicKeyFromHex(publicKey.ExportHex())
+	publicKeyHex, err := paseto.NewV4AsymmetricPublicKeyFromHex(publicKey.ExportHex())
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedParsePublicHexText, err)
 		return nil, err
 	}
 
-	parsed, err := parser.ParseV4Public(pubKeyHex, token, nil)
+	parsedToken, err := parser.ParseV4Public(publicKeyHex, token, nil)
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedParseTokenText, err)
 		return nil, errors.New(errormessage.ErrInvalidAccessTokenText)
 	}
 
-	jtiString, err := parsed.GetJti()
+	jti, err := parseUUID(parsedToken.GetJti, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedGetJTIText, err)
 		return nil, err
 	}
 
-	jti, err := uuid.Parse(jtiString)
+	accountId, err := parseUUID(parsedToken.GetSubject, errormessage.ErrFailedGetSubText, errormessage.ErrFailedParseACIText)
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedParseJTIText, err)
 		return nil, err
 	}
 
-	accountIdString, err := parsed.GetSubject()
-	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedGetSubText, err)
-		return nil, err
-	}
-
-	accountId, err := uuid.Parse(accountIdString)
-	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedParseACIText, err)
-		return nil, err
-	}
-
-	issuedAt, err := parsed.GetIssuedAt()
+	issuedAt, err := parsedToken.GetIssuedAt()
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedGetIATText, err)
 		return nil, err
 	}
 
-	notBefore, err := parsed.GetNotBefore()
+	notBefore, err := parsedToken.GetNotBefore()
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedGetNBFText, err)
 		return nil, err
 	}
 
-	exp, err := parsed.GetExpiration()
+	expiration, err := parsedToken.GetExpiration()
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedGetEXPText, err)
 		return nil, err
-	} else if exp.Before(time.Now()) {
+	} else if expiration.Before(time.Now()) {
 		log.Printf("%s: %v", errormessage.ErrTokenExpiredText, err)
 		return nil, err
 	}
@@ -103,9 +85,28 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 		AccountId: accountId,
 		IssuedAt:  issuedAt,
 		NotBefore: notBefore,
-		ExpiresAt: exp,
-		TokenType: string(parsed.Footer()),
+		ExpiresAt: expiration,
+		TokenType: string(parsedToken.Footer()),
 	}
 
 	return tokenPayload, nil
+}
+
+// parseUUID attempts to get a field and parse it as a UUID.
+// It uses getFieldFunc to retrieve the field value as a string.
+// Logs and returns an error if retrieval or parsing fails, using getFieldErrMsg and parseErrMsg respectively.
+func parseUUID(getFieldFunc func() (string, error), getFieldErrMsg, parseErrMsg string) (uuid.UUID, error) {
+	fieldStr, err := getFieldFunc()
+	if err != nil {
+		log.Printf("%s: %v", getFieldErrMsg, err)
+		return uuid.Nil, err
+	}
+
+	fieldUUID, err := uuid.Parse(fieldStr)
+	if err != nil {
+		log.Printf("%s: %v", parseErrMsg, err)
+		return uuid.Nil, err
+	}
+
+	return fieldUUID, nil
 }
