@@ -32,10 +32,7 @@ func AccountMigration(db *gorm.DB) {
 			return err
 		}
 
-		userPassHashed := &AccountPassHashed{
-			AccountId:  account.ID,
-			PassHashed: generatedHash,
-		}
+		userPassHashed := &AccountPassHashed{AccountId: account.ID, PassHashed: generatedHash}
 
 		if tx.Model(&account).Where("email = ?", account.Email).Updates(&account).RowsAffected == 0 {
 			if err := tx.Create(&account).Error; err != nil {
