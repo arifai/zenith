@@ -15,7 +15,6 @@ const (
 	ErrMissingAuthorizationHeaderText   = "authorization header missing"
 	ErrInvalidAccessTokenText           = "invalid access token"
 	ErrCannotFindAuthorizedAccountText  = "cannot find authorized account"
-	ErrCannotParseRequestText           = "cannot parse request data"
 	ErrParsingRequestDataText           = "failed to parsing request data"
 	ErrFailedToConnectDBText            = "failed to connect to database"
 	ErrFailedGetDBInstanceText          = "failed to get database instance"
@@ -33,6 +32,7 @@ const (
 	ErrRequestBodyEmptyText             = "request body is empty"
 	ErrInvalidTokenTypeText             = "invalid token type"
 	ErrWrongOldPasswordText             = "wrong old password"
+	ErrInvalidSaltLengthText            = "invalid salt length"
 )
 
 var (
@@ -46,4 +46,5 @@ var (
 	ErrInvalidEncodedHash           = errors.New(ErrInvalidEncodedHashText)
 	ErrIncompatibleArgon2Version    = errors.New(ErrIncompatibleArgon2VersionText)
 	ErrWrongOldPassword             = errors.New(ErrWrongOldPasswordText)
+	ErrInvalidSaltLength            = errors.New(ErrInvalidSaltLengthText)
 )

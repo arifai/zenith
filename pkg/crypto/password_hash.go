@@ -24,16 +24,20 @@ type Argon2IdHash struct {
 // memory, threads, key length, and salt length.
 var DefaultArgon2IDHash = &Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}
 
+// SaltSize is the size of the generated salt
+const SaltSize = 32
+
+// Argon2Version is the version of the argon2 algorithm
+const Argon2Version = argon2.Version
+
 // GenerateHash generates a password hash using the Argon2ID algorithm and given salt. Returns the encoded hash or an error.
 func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
-	var err error
-
-	if len(salt) > 0 && uint32(len(salt)) != a.SaltLen {
-		log.Printf("salt length is incorrect: expected %d bytes, got %d bytes", a.SaltLen, len(salt))
+	if err := validateSaltLength(salt, a.SaltLen); err != nil {
 		return "", err
 	}
 
 	if len(salt) == 0 {
+		var err error
 		salt, err = generateBytes(a.SaltLen)
 		if err != nil {
 			return "", err
@@ -41,11 +45,22 @@ func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	}
 
 	hash := argon2.IDKey(password, salt, a.Time, a.Memory, a.Threads, a.KeyLen)
+
+	return encodeHashComponents(salt, hash, a), nil
+}
+
+func validateSaltLength(salt []byte, expectedSaltLen uint32) error {
+	if len(salt) > 0 && uint32(len(salt)) != expectedSaltLen {
+		log.Printf("salt length is incorrect: expected %d bytes, got %d bytes", expectedSaltLen, len(salt))
+		return errormessage.ErrInvalidSaltLength
+	}
+	return nil
+}
+
+func encodeHashComponents(salt, hash []byte, a *Argon2IdHash) string {
 	base64Salt := base64.StdEncoding.EncodeToString(salt)
 	base64Hash := base64.StdEncoding.EncodeToString(hash)
-	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, a.Memory, a.Time, a.Threads, base64Salt, base64Hash)
-
-	return encodedHash, nil
+	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", Argon2Version, a.Memory, a.Time, a.Threads, base64Salt, base64Hash)
 }
 
 // VerifyHash compares a password with its encoded hash to check for validity.
@@ -58,7 +73,6 @@ func VerifyHash(password, encodedHash string) (bool, error) {
 	}
 
 	otherHash := argon2.IDKey([]byte(password), salt, a.Time, a.Memory, a.Threads, a.KeyLen)
-
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
 		return true, nil
 	}
@@ -74,7 +88,6 @@ func generateBytes(length uint32) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return secret, nil
 }
 
@@ -87,28 +100,23 @@ func decodeHash(encodedHash string) (a *Argon2IdHash, salt, hash []byte, err err
 	}
 
 	var version int
-	_, err = fmt.Sscanf(value[2], "v=%d", &version)
-	if err != nil {
+	if _, err = fmt.Sscanf(value[2], "v=%d", &version); err != nil {
 		return nil, nil, nil, errormessage.ErrIncompatibleArgon2Version
 	}
 
 	a = &Argon2IdHash{}
-	_, err = fmt.Sscanf(value[3], "m=%d,t=%d,p=%d", &a.Memory, &a.Time, &a.Threads)
-	if err != nil {
+	if _, err = fmt.Sscanf(value[3], "m=%d,t=%d,p=%d", &a.Memory, &a.Time, &a.Threads); err != nil {
 		return nil, nil, nil, err
 	}
 
-	salt, err = base64.StdEncoding.DecodeString(value[4])
-	if err != nil {
+	if salt, err = base64.StdEncoding.DecodeString(value[4]); err != nil {
 		return nil, nil, nil, err
 	}
-
 	a.SaltLen = uint32(len(salt))
-	hash, err = base64.StdEncoding.DecodeString(value[5])
-	if err != nil {
+
+	if hash, err = base64.StdEncoding.DecodeString(value[5]); err != nil {
 		return nil, nil, nil, err
 	}
-
 	a.KeyLen = uint32(len(hash))
 
 	return a, salt, hash, nil
