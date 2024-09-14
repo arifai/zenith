@@ -20,6 +20,10 @@ type Argon2IdHash struct {
 	SaltLen uint32
 }
 
+// DefaultArgon2IDHash is an instance of crypto.Argon2IdHash used to configure Argon2ID password hashing with specified time,
+// memory, threads, key length, and salt length.
+var DefaultArgon2IDHash = &Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}
+
 // GenerateHash generates a password hash using the Argon2ID algorithm and given salt. Returns the encoded hash or an error.
 func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	var err error

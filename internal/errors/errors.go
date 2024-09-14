@@ -32,6 +32,7 @@ const (
 	ErrBadRequestText                   = "bad request"
 	ErrRequestBodyEmptyText             = "request body is empty"
 	ErrInvalidTokenTypeText             = "invalid token type"
+	ErrWrongOldPasswordText             = "wrong old password"
 )
 
 var (
@@ -44,4 +45,5 @@ var (
 	ErrFailedToGenerateRefreshToken = errors.New(ErrFailedToGenerateRefreshTokenText)
 	ErrInvalidEncodedHash           = errors.New(ErrInvalidEncodedHashText)
 	ErrIncompatibleArgon2Version    = errors.New(ErrIncompatibleArgon2VersionText)
+	ErrWrongOldPassword             = errors.New(ErrWrongOldPasswordText)
 )

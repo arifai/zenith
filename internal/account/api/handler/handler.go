@@ -89,3 +89,23 @@ func UpdateAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) 
 
 	resp.Success(ctx, result)
 }
+
+// UpdatePasswordAccountHandler handles the request to update an account password using provided old and new passwords.
+func UpdatePasswordAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
+	resp := new(common.Response)
+	accountService := service.NewAccountService(db, config)
+	context := core.NewContext(ctx)
+	body, err := utils.ValidateBody[types.AccountUpdatePasswordRequest](ctx)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	result, err := accountService.UpdatePassword(context, body)
+	if err != nil {
+		resp.Error(ctx, err)
+		return
+	}
+
+	resp.Success(ctx, result)
+}

@@ -52,5 +52,18 @@ func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.Account
 	if err != nil {
 		return nil, err
 	}
+
 	return s.repo.Update(currentAccount.ID, payload)
+}
+
+// UpdatePassword changes the password for the current account using the provided payload.
+// It retrieves the current account from the context, then updates the account's password in the repository.
+// Returns the updated model.Account or an error if encountered.
+func (s *AccountService) UpdatePassword(ctx *core.Context, payload *types.AccountUpdatePasswordRequest) (m *model.Account, err error) {
+	currentAccount, err := s.GetAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.repo.UpdatePassword(currentAccount.ID, payload)
 }

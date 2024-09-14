@@ -31,8 +31,7 @@ func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest
 		return nil, errors.ErrEmailAlreadyExists
 	}
 
-	hash := crp.Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}
-	generateHash, err := hash.GenerateHash([]byte(payload.Password), []byte(config.Load().PasswordSalt))
+	generateHash, err := crp.DefaultArgon2IDHash.GenerateHash([]byte(payload.Password), []byte(config.Load().PasswordSalt))
 	if err != nil {
 		return nil, err
 	}
@@ -82,4 +81,29 @@ func (repo *AccountRepository) Update(id uuid.UUID, payload *types.AccountUpdate
 	founded.Email = payload.Email
 
 	return founded.Update(repo.db)
+}
+
+// UpdatePassword updates the password for an existing account identified by id.
+// It verifies the old password and hashes the new password before saving it to the database.
+// Returns the updated model.Account or an error if any step fails.
+func (repo *AccountRepository) UpdatePassword(id uuid.UUID, payload *types.AccountUpdatePasswordRequest) (*model.Account, error) {
+	founded, err := repo.Find(id)
+	if err != nil {
+		return nil, err
+	}
+
+	verifyHash, err := crp.VerifyHash(payload.OldPassword, founded.AccountPassHashed.PassHashed)
+	if err != nil {
+		return nil, err
+	} else if !verifyHash {
+		return nil, errors.ErrWrongOldPassword
+	} else {
+		generateHash, err := crp.DefaultArgon2IDHash.GenerateHash([]byte(payload.NewPassword), []byte(config.Load().PasswordSalt))
+		if err != nil {
+			return nil, err
+		}
+		founded.AccountPassHashed.PassHashed = generateHash
+	}
+
+	return founded.UpdatePassword(repo.db)
 }

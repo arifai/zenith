@@ -26,5 +26,7 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config) {
 		}).
 		PATCH("/me/update", func(c *gin.Context) {
 			handler.UpdateAccountHandler(c, db, config)
-		})
+		}).PUT("/me/update_password", func(c *gin.Context) {
+		handler.UpdatePasswordAccountHandler(c, db, config)
+	})
 }
