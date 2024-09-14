@@ -28,8 +28,8 @@ func NewAccountAuthService(db *gorm.DB, config *config.Config) *AccountAuthServi
 
 // Authorize authenticates an account using the provided email and password.
 // It returns a common.AuthResponse containing access and refresh tokens or an error.
-func (a AccountAuthService) Authorize(body *types.AccountAuthRequest) (*common.AuthResponse, error) {
-	account, err := a.repo.FindByEmail(body.Email)
+func (a AccountAuthService) Authorize(payload *types.AccountAuthRequest) (*common.AuthResponse, error) {
+	account, err := a.repo.FindByEmail(payload.Email)
 	if err != nil {
 		return nil, errmsg.ErrEmailAddressNotFound
 	} else if !account.Active {
@@ -38,7 +38,7 @@ func (a AccountAuthService) Authorize(body *types.AccountAuthRequest) (*common.A
 		return nil, errmsg.ErrAccountPasswordHashMissing
 	}
 
-	valid, err := crypto.VerifyHash(body.Password, account.AccountPassHashed.PassHashed)
+	valid, err := crypto.VerifyHash(payload.Password, account.AccountPassHashed.PassHashed)
 	if err != nil {
 		return nil, err
 	} else if !valid {
