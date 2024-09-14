@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// TokenPayload struct to hold token payload
+// TokenPayload represents the payload data structure embedded in a token.
 type TokenPayload struct {
 	Jti       uuid.UUID
 	AccountId uuid.UUID
@@ -19,7 +19,7 @@ type TokenPayload struct {
 	TokenType string
 }
 
-// GenerateToken function to generate token
+// GenerateToken creates a signed token using the given secret key.
 func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) string {
 	token := paseto.NewToken()
 
@@ -35,7 +35,7 @@ func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) str
 	return signed
 }
 
-// VerifyToken function to verify token
+// VerifyToken verifies a given token using the provided public key, and returns the decoded TokenPayload if valid.
 func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPayload, error) {
 	parser := paseto.NewParser()
 	parser.AddRule(paseto.NotBeforeNbf())

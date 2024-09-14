@@ -2,8 +2,8 @@ package utils
 
 import "strings"
 
-// CapitalizeFirstLetter is a function to capitalize first letter of a string.
-// This function will split the string by underscore, and join them back with space.
+// CapitalizeFirstLetter capitalizes the first letter of each word in the given text,
+// where words are separated by underscores.
 func CapitalizeFirstLetter(text string) string {
 	if len(text) == 0 {
 		return text

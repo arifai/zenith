@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// IError is a struct to represent error
+// IError represents a structured error with field and description.
 type IError struct {
 	Field string `json:"field"`
 	Value string `json:"description"`
@@ -26,14 +26,15 @@ var (
 	trans, _ = uni.GetTranslator("en")
 )
 
-// SetupTranslation is a function to set up translation
+// SetupTranslation registers default English translations for the validator package.
+// Logs to console if registration fails.
 func SetupTranslation() {
 	if err := enlocale.RegisterDefaultTranslations(validate, trans); err != nil {
 		fmt.Printf("Error registering translation: %v", err)
 	}
 }
 
-// ValidateBody is a function to validate body
+// ValidateBody validates the JSON body of an HTTP request and binds it to a struct.
 func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
 	if err := ctx.ShouldBindJSON(body); err != nil {
@@ -50,7 +51,9 @@ func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 	return body, nil
 }
 
-// ValidateQuery is a function to validate query
+// ValidateQuery binds query parameters to a struct and validates them.
+// ctx is the Gin context containing the request data.
+// Returns the parsed struct (body) or a slice of IError if validation fails.
 func ValidateQuery[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
 	if err := ctx.ShouldBindQuery(body); err != nil {
@@ -65,7 +68,7 @@ func ValidateQuery[T any](ctx *gin.Context) (*T, interface{}) {
 
 }
 
-// validateStruct is a function to validate struct
+// validateStruct validates a given struct and returns a slice of IError if validation errors are present.
 func validateStruct(body interface{}) []IError {
 	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
 		name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]

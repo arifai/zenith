@@ -10,13 +10,14 @@ import (
 	"log"
 )
 
-// AccountService is a struct that represent the account service
+// AccountService provides methods to manage user accounts
+// It integrates configuration settings and account repository for CRUD operations
 type AccountService struct {
 	config *config.Config
 	repo   *repository.AccountRepository
 }
 
-// NewAccountService creates a new account service
+// NewAccountService initializes a new AccountService with the given database context and configuration settings.
 func NewAccountService(db *gorm.DB, config *config.Config) *AccountService {
 	return &AccountService{
 		config: config,
@@ -24,12 +25,15 @@ func NewAccountService(db *gorm.DB, config *config.Config) *AccountService {
 	}
 }
 
-// CreateAccount creates a new account
+// CreateAccount registers a new user account in the system using the provided payload data.
+// The payload must contain full name, email, and password. Returns the created model.Account or any error encountered.
 func (s *AccountService) CreateAccount(payload *types.CreateAccountRequest) (*model.Account, error) {
 	return s.repo.CreateAccount(payload)
 }
 
-// GetAccount gets the current account
+// GetAccount retrieves the current account from the given context.
+// It casts ctx.CurrentAccount to a model.Account pointer.
+// Returns the current model.Account or an error if the type assertion fails.
 func (s *AccountService) GetAccount(ctx *core.Context) (m *model.Account, err error) {
 	currentAccount, ok := ctx.CurrentAccount.(*model.Account)
 	if !ok {
@@ -40,7 +44,9 @@ func (s *AccountService) GetAccount(ctx *core.Context) (m *model.Account, err er
 	return currentAccount, nil
 }
 
-// UpdateAccount updates an account
+// UpdateAccount updates the details of the current account using the provided payload.
+// It first retrieves the current account from the context, then updates the account data in the repository.
+// Returns the updated model.Account or an error if encountered.
 func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.UpdateAccountRequest) (m *model.Account, err error) {
 	currentAccount, err := s.GetAccount(ctx)
 	if err != nil {

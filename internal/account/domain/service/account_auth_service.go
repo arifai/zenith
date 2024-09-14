@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-// AccountAuthService is a struct that represent the account auth repository
+// AccountAuthService is used for handling account authorization processes.
 type AccountAuthService struct {
 	config *config.Config
 	repo   *repository.AccountRepository
 }
 
-// NewAccountAuthService creates a new account auth repository
+// NewAccountAuthService initializes an AccountAuthService with a given database connection and configuration settings.
 func NewAccountAuthService(db *gorm.DB, config *config.Config) *AccountAuthService {
 	return &AccountAuthService{
 		config: config,
@@ -26,7 +26,8 @@ func NewAccountAuthService(db *gorm.DB, config *config.Config) *AccountAuthServi
 	}
 }
 
-// Authorize authorizes an account
+// Authorize authenticates an account using the provided email and password.
+// It returns a common.AuthResponse containing access and refresh tokens or an error.
 func (a AccountAuthService) Authorize(body *types.AccountAuthRequest) (*common.AuthResponse, error) {
 	account, err := a.repo.FindByEmail(body.Email)
 	if err != nil {

@@ -11,15 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// AccountRepository is a struct that represent the account repository
+// AccountRepository handles CRUD operations for account data in the database.
 type AccountRepository struct{ db *gorm.DB }
 
-// NewAccountRepository creates a new account repository
+// NewAccountRepository initializes a new AccountRepository with a database context and debug mode enabled.
 func NewAccountRepository(db *gorm.DB) *AccountRepository {
 	return &AccountRepository{db: db.WithContext(context.Background()).Debug()}
 }
 
-// CreateAccount creates a new account
+// CreateAccount registers a new user account in the system using the provided payload data. The payload must contain
+// full name, email, and password. If the email already exists in the database, it returns an errors.ErrEmailAlreadyExists error.
+// Passwords are hashed using Argon2ID hashing algorithm before saving. Returns the created model.Account or any errors encountered.
 func (repo *AccountRepository) CreateAccount(payload *types.CreateAccountRequest) (*model.Account, error) {
 	m := new(model.Account)
 	exists, err := m.EmailExists(repo.db, payload.Email)
@@ -44,7 +46,7 @@ func (repo *AccountRepository) CreateAccount(payload *types.CreateAccountRequest
 	return account.CreateAccount(repo.db)
 }
 
-// Find finds an account by its id
+// Find retrieves an account by its uuid.UUID from the database.
 func (repo *AccountRepository) Find(id uuid.UUID) (*model.Account, error) {
 	account := new(model.Account)
 	founded, err := account.FindByID(repo.db, id)
@@ -55,7 +57,8 @@ func (repo *AccountRepository) Find(id uuid.UUID) (*model.Account, error) {
 	return founded, nil
 }
 
-// FindByEmail finds an account by its email
+// FindByEmail retrieves an account by its email address from the database.
+// It returns a pointer to the model.Account and an error if any.
 func (repo *AccountRepository) FindByEmail(email string) (*model.Account, error) {
 	account := new(model.Account)
 	founded, err := account.FindByEmail(repo.db, email)
@@ -66,7 +69,9 @@ func (repo *AccountRepository) FindByEmail(email string) (*model.Account, error)
 	return founded, nil
 }
 
-// Update updates an account
+// Update modifies an existing account with the given id using the provided payload data.
+// If the account is found, its FullName and Email fields are updated and changes are saved in the database.
+// Returns the updated model.Account or an error if any step fails.
 func (repo *AccountRepository) Update(id uuid.UUID, payload *types.UpdateAccountRequest) (*model.Account, error) {
 	founded, err := repo.Find(id)
 	if err != nil {

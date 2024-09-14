@@ -7,7 +7,9 @@ import (
 	"log"
 )
 
-// AccountMigration will create the account table and insert the initial data
+// AccountMigration performs the migration of the Account and AccountPassHashed tables. It drops the existing tables, creates
+// new ones, and inserts a default account with a hashed password if it does not already exist. All operations are handled
+// within a transaction to ensure atomicity.
 func AccountMigration(db *gorm.DB) {
 	err := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Migrator().DropTable(&Account{}, &AccountPassHashed{}); err != nil {

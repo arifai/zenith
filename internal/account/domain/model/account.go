@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-// Account is a struct that represent the account model
+// Account represents a user entity with various attributes such as ID, FullName, Email, etc.
+// It includes fields for account management and profile information.
 type Account struct {
 	ID                uuid.UUID          `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	FullName          string             `json:"full_name" gorm:"not null;column:full_name;type:varchar"`
@@ -20,7 +21,7 @@ type Account struct {
 	AccountPassHashed *AccountPassHashed `json:"-" gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
-// AccountPassHashed is a struct that represent the user_pass_hashed model
+// AccountPassHashed represents a hashed password associated with an account.
 type AccountPassHashed struct {
 	ID         uuid.UUID  `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	AccountId  uuid.UUID  `json:"account_id" gorm:"not null;column:account_id;type:uuid"`
@@ -29,7 +30,7 @@ type AccountPassHashed struct {
 	UpdatedAt  *time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 }
 
-// CreateAccount creates a new account and handles its association with AccountPassHashed
+// CreateAccount creates a new Account in the database. Returns the created Account or an error.
 func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	tx := db.Begin()
 
@@ -59,7 +60,8 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	return a, nil
 }
 
-// FindByID finds an Account by its ID
+// FindByID retrieves an account from the database using the provided [uuid.UUID].
+// Returns the Account and an error if encountered.
 func (a *Account) FindByID(db *gorm.DB, id uuid.UUID) (*Account, error) {
 	if err := db.First(a, id).Error; err != nil {
 		return nil, err
@@ -68,7 +70,8 @@ func (a *Account) FindByID(db *gorm.DB, id uuid.UUID) (*Account, error) {
 	return a, nil
 }
 
-// FindByEmail finds an Account by its email
+// FindByEmail retrieves an account based on the provided email. It preloads the associated AccountPassHashed data.
+// Returns the Account and an error if encountered.
 func (a *Account) FindByEmail(db *gorm.DB, email string) (*Account, error) {
 	if err := db.Where(&Account{Email: email}).Preload("AccountPassHashed").First(a).Error; err != nil {
 		return nil, err
@@ -77,7 +80,8 @@ func (a *Account) FindByEmail(db *gorm.DB, email string) (*Account, error) {
 	return a, nil
 }
 
-// EmailExists checks if an email already exists in the database
+// EmailExists checks if an email already exists in the database.
+// Returns true if the email exists, false otherwise, or an error.
 func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 	var count int64
 	if err := db.Model(&Account{}).Where(&Account{Email: email}).Count(&count).Error; err != nil {
@@ -87,9 +91,9 @@ func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 	return count > 0, nil
 }
 
-// Update updates an Account
+// Update updates the current Account entity in the database. Returns the updated Account or an error.
 func (a *Account) Update(db *gorm.DB) (*Account, error) {
-	if err := db.Save(a).Clauses(clause.Returning{}).Error; err != nil {
+	if err := db.Updates(a).Clauses(clause.Returning{}).Error; err != nil {
 		return nil, err
 	}
 

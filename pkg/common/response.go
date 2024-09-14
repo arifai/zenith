@@ -11,10 +11,10 @@ import (
 )
 
 type (
-	// Response is a struct that represent api response
+	// Response is a struct designed to handle various types of API responses, such as success, error, and authorization.
 	Response struct{}
 
-	// ResponseModel is a struct that represent api response model
+	// ResponseModel represents the structure of the response returned by the API.
 	ResponseModel struct {
 		Code    int            `json:"code"`
 		Message string         `json:"message"`
@@ -22,13 +22,13 @@ type (
 		Result  any            `json:"result"`
 	}
 
-	// AuthResponse is a struct that represent authorize response
+	// AuthResponse represents the structure of the authentication response containing AccessToken and RefreshToken.
 	AuthResponse struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 	}
 
-	// EntriesModel is a struct that represent entries response
+	// EntriesModel represents a paginated collection of entries of a generic type T.
 	EntriesModel[T interface{}] struct {
 		Entries    []T `json:"entries"`
 		Count      int `json:"count"`
@@ -37,7 +37,7 @@ type (
 	}
 )
 
-// New is a function to create new response. You can customize the response code, message, and result
+// New sets the response format and sends a JSON response with HTTP code, message, errors, and result data.
 func (r Response) New(c *gin.Context, code int, message string, errors []utils.IError, result interface{}) {
 	c.JSON(code, ResponseModel{
 		Code:    code,
@@ -47,7 +47,7 @@ func (r Response) New(c *gin.Context, code int, message string, errors []utils.I
 	})
 }
 
-// NewEntries is a function to create new entries response
+// NewEntries creates and returns a pointer to an EntriesModel with the given entries, count, page, and totalPages.
 func NewEntries[T interface{}](entries []T, count, page, totalPages int) *EntriesModel[T] {
 	return &EntriesModel[T]{
 		Entries:    entries,
@@ -57,7 +57,7 @@ func NewEntries[T interface{}](entries []T, count, page, totalPages int) *Entrie
 	}
 }
 
-// Success is a function to create success response
+// Success sets a JSON success response with HTTP status 200 and the provided result data.
 func (r Response) Success(c *gin.Context, result interface{}) {
 	c.JSON(http.StatusOK, ResponseModel{
 		Code:    http.StatusOK,
@@ -67,7 +67,7 @@ func (r Response) Success(c *gin.Context, result interface{}) {
 	})
 }
 
-// Created is a function to create created response
+// Created sets a JSON response with HTTP status 201, providing a message and the result data.
 func (r Response) Created(c *gin.Context, message string, result interface{}) {
 	c.JSON(http.StatusCreated, ResponseModel{
 		Code:    http.StatusCreated,
@@ -77,7 +77,7 @@ func (r Response) Created(c *gin.Context, message string, result interface{}) {
 	})
 }
 
-// Authorized is a function to create authorized response
+// Authorized sends an HTTP 202 Accepted response with the given authentication result.
 func (r Response) Authorized(c *gin.Context, result *AuthResponse) {
 	c.JSON(http.StatusAccepted, ResponseModel{
 		Code:    http.StatusAccepted,
@@ -87,7 +87,7 @@ func (r Response) Authorized(c *gin.Context, result *AuthResponse) {
 	})
 }
 
-// Unauthorized is a function to create unauthorized response
+// Unauthorized sends an HTTP 401 Unauthorized response with a custom message and a list of errors.
 func (r Response) Unauthorized(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusUnauthorized, ResponseModel{
 		Code:    http.StatusUnauthorized,
@@ -97,7 +97,7 @@ func (r Response) Unauthorized(c *gin.Context, errors []utils.IError, message st
 	})
 }
 
-// NotFound is a function to create not found response
+// NotFound is a handler function that responds with a '404 Not Found' status and a formatted message using JSON.
 func NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, ResponseModel{
 		Code:    http.StatusNotFound,
@@ -107,7 +107,7 @@ func NotFound(c *gin.Context, message string) {
 	})
 }
 
-// Error is a function to create error response
+// Error handles different types of errors (string, []utils.IError, error) and responds with appropriate HTTP status.
 func (r Response) Error(c *gin.Context, errParam interface{}) {
 	switch err := errParam.(type) {
 	case string:
@@ -130,7 +130,7 @@ func (r Response) Error(c *gin.Context, errParam interface{}) {
 	}
 }
 
-// BadRequest is a function to create bad request response
+// BadRequest sends an HTTP 400 Bad Request response with a custom message and a list of errors.
 func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusBadRequest, ResponseModel{
 		Code:    http.StatusBadRequest,
@@ -140,7 +140,7 @@ func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message stri
 	})
 }
 
-// InternalServerError is a function to create internal server error response
+// InternalServerError sends an HTTP 500 Internal Server Error response with a custom message and an empty list of errors.
 func (r Response) InternalServerError(c *gin.Context, message string) {
 	c.JSON(http.StatusInternalServerError, ResponseModel{
 		Code:    http.StatusInternalServerError,

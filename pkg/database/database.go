@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-// ConnectDatabase function to connect to database
+// ConnectDatabase establishes a connection to the database using the provided configuration settings.
+// It returns a *gorm.DB instance for interacting with the database.
 func ConnectDatabase(config config.Config) *gorm.DB {
 	log.Println("Connecting to database...")
 

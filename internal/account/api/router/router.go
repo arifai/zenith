@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// AccountRouter is a function to handle the account router
+// AccountRouter sets up all routes related to account operations under the provided gin.RouterGroup.
 func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config) {
 	group.Group("/auth").
 		Group("/account").

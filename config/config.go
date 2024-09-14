@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-// Config struct to store environment variables
+// Config contains configuration settings loaded from environment variables.
 type Config struct {
 	DatabaseHost     string `env:"DB_HOST"`
 	DatabasePort     string `env:"DB_PORT"`
@@ -24,7 +24,8 @@ var (
 	PublicKey = SecretKey.Public()
 )
 
-// Load function to load environment variables
+// Load loads the configuration from the provided `.env` files and environment variables, then returns the config struct.
+// It logs a fatal error if the `.env` files or environment variables cannot be loaded.
 func Load(filenames ...string) (config Config) {
 	if err := godotenv.Load(filenames...); err != nil {
 		log.Fatalf("Error loading `.env` file: %v", err)

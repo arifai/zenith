@@ -11,7 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// AuthHandler is a function to handle the auth handler
+// AuthHandler handles the authentication requests by validating input, using the account service to authorize,
+// and responding accordingly.
 func AuthHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp := new(common.Response)
 	accountService := service.NewAccountAuthService(db, config)
@@ -30,7 +31,9 @@ func AuthHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp.Authorized(ctx, result)
 }
 
-// GetAccountHandler is a function to handle the get account handler
+// GetAccountHandler handles the retrieval of an account using the GetAccount service.
+// It initializes the account service and context, then attempts to get the account.
+// Upon success, it sends a success response; otherwise, it sends an error response.
 func GetAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp := new(common.Response)
 	accountService := service.NewAccountService(db, config)
@@ -44,7 +47,9 @@ func GetAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp.Success(ctx, result)
 }
 
-// RegisterAccountHandler is a function to handle the register account handler
+// RegisterAccountHandler handles the registration of a new user account.
+// It validates the request body, creates a new user account using the CreateAccount service,
+// and returns an appropriate response based on the operation outcome.
 func RegisterAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp := new(common.Response)
 	accountService := service.NewAccountService(db, config)
@@ -63,7 +68,9 @@ func RegisterAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config
 	resp.Created(ctx, "", result)
 }
 
-// UpdateAccountHandler is a function to handle the update account handler
+// UpdateAccountHandler handles the HTTP request for updating an account.
+// It validates the request body, invokes the account service to update the account,
+// and sends the appropriate response based on the success or failure of the update operation.
 func UpdateAccountHandler(ctx *gin.Context, db *gorm.DB, config *config.Config) {
 	resp := new(common.Response)
 	accountService := service.NewAccountService(db, config)

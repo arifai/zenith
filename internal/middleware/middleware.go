@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Middleware function to check authorization header
+// Middleware is a Gin middleware for validating access tokens from Authorization headers and setting authorized account context.
 func Middleware(db *gorm.DB) gin.HandlerFunc {
 	repo := repository.NewAccountRepository(db)
 
