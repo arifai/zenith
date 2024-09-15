@@ -47,7 +47,7 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 
 	if a.AccountPassHashed != nil {
 		a.AccountPassHashed.AccountId = a.ID
-		if err := tx.Where(AccountPassHashed{AccountId: a.ID}).FirstOrCreate(a.AccountPassHashed).Error; err != nil {
+		if err := tx.Where(&AccountPassHashed{AccountId: a.ID}).FirstOrCreate(a.AccountPassHashed).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}
@@ -60,7 +60,7 @@ func (a *Account) CreateAccount(db *gorm.DB) (*Account, error) {
 	return a, nil
 }
 
-// FindByID retrieves an account from the database using the provided [uuid.UUID].
+// FindByID retrieves an account from the database using the provided uuid.UUID.
 // Returns the Account and an error if encountered.
 func (a *Account) FindByID(db *gorm.DB, id uuid.UUID) (*Account, error) {
 	if err := db.Preload("AccountPassHashed").First(a, id).Error; err != nil {
@@ -84,7 +84,7 @@ func (a *Account) FindByEmail(db *gorm.DB, email string) (*Account, error) {
 // Returns true if the email exists, false otherwise, or an error.
 func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 	var count int64
-	if err := db.Where(&Account{Email: email}).Count(&count).Error; err != nil {
+	if err := db.Model(&Account{}).Where(&Account{Email: email}).Count(&count).Error; err != nil {
 		return false, err
 	}
 
@@ -93,7 +93,7 @@ func (a *Account) EmailExists(db *gorm.DB, email string) (bool, error) {
 
 // Update updates the current Account entity in the database. Returns the updated Account or an error.
 func (a *Account) Update(db *gorm.DB) (*Account, error) {
-	if err := db.Updates(a).Clauses(clause.Returning{}).Error; err != nil {
+	if err := db.Clauses(clause.Returning{}).Updates(a).Error; err != nil {
 		return nil, err
 	}
 
@@ -102,9 +102,8 @@ func (a *Account) Update(db *gorm.DB) (*Account, error) {
 
 // UpdatePassword updates the password of an Account in the database. Returns the updated Account or an error.
 func (a *Account) UpdatePassword(db *gorm.DB) (*Account, error) {
-	if err := db.Where(AccountPassHashed{AccountId: a.ID}).
-		Updates(AccountPassHashed{PassHashed: a.AccountPassHashed.PassHashed}).
-		Error; err != nil {
+	if err := db.Model(&AccountPassHashed{}).Where(&AccountPassHashed{AccountId: a.ID}).
+		Update("pass_hashed", a.AccountPassHashed.PassHashed).Error; err != nil {
 		return nil, err
 	}
 
