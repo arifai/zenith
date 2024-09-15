@@ -1,54 +1,43 @@
 package service
 
 import (
+	"fmt"
 	"github.com/arifai/go-modular-monolithic/config"
 	"github.com/arifai/go-modular-monolithic/internal/account/api/types"
 	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
 	"github.com/arifai/go-modular-monolithic/internal/account/domain/repository"
 	"github.com/arifai/go-modular-monolithic/pkg/core"
+	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
 	"gorm.io/gorm"
-	"log"
 )
 
-// AccountService provides methods to manage user accounts
-// It integrates configuration settings and account repository for CRUD operations
+// AccountService provides methods to manage user accounts.
 type AccountService struct {
-	config *config.Config
-	repo   *repository.AccountRepository
+	cfg  *config.Config
+	repo *repository.AccountRepository
 }
 
 // NewAccountService initializes a new AccountService with the given database context and configuration settings.
-func NewAccountService(db *gorm.DB, config *config.Config) *AccountService {
+func NewAccountService(db *gorm.DB, cfg *config.Config) *AccountService {
 	return &AccountService{
-		config: config,
-		repo:   repository.NewAccountRepository(db),
+		cfg:  cfg,
+		repo: repository.NewAccountRepository(db),
 	}
 }
 
 // CreateAccount registers a new user account in the system using the provided payload data.
-// The payload must contain full name, email, and password. Returns the created model.Account or any error encountered.
 func (s *AccountService) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
 	return s.repo.CreateAccount(payload)
 }
 
 // GetAccount retrieves the current account from the given context.
-// It casts ctx.CurrentAccount to a model.Account pointer.
-// Returns the current model.Account or an error if the type assertion fails.
-func (s *AccountService) GetAccount(ctx *core.Context) (m *model.Account, err error) {
-	currentAccount, ok := ctx.CurrentAccount.(*model.Account)
-	if !ok {
-		log.Fatalf("type assertion to *model.Account failed, got %T", ctx.CurrentAccount)
-		return nil, err
-	}
-
-	return currentAccount, nil
+func (s *AccountService) GetAccount(ctx *core.Context) (*model.Account, error) {
+	return s.getCurrentAccount(ctx)
 }
 
 // UpdateAccount updates the details of the current account using the provided payload.
-// It first retrieves the current account from the context, then updates the account data in the repository.
-// Returns the updated model.Account or an error if encountered.
-func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.AccountUpdateRequest) (m *model.Account, err error) {
-	currentAccount, err := s.GetAccount(ctx)
+func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.AccountUpdateRequest) (*model.Account, error) {
+	currentAccount, err := s.getCurrentAccount(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +46,22 @@ func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.Account
 }
 
 // UpdatePassword changes the password for the current account using the provided payload.
-// It retrieves the current account from the context, then updates the account's password in the repository.
-// Returns the updated model.Account or an error if encountered.
-func (s *AccountService) UpdatePassword(ctx *core.Context, payload *types.AccountUpdatePasswordRequest) (m *model.Account, err error) {
-	currentAccount, err := s.GetAccount(ctx)
+func (s *AccountService) UpdatePassword(ctx *core.Context, payload *types.AccountUpdatePasswordRequest) (*model.Account, error) {
+	currentAccount, err := s.getCurrentAccount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return s.repo.UpdatePassword(currentAccount.ID, payload)
+}
+
+// getCurrentAccount retrieves and asserts the current account from the context.
+func (s *AccountService) getCurrentAccount(ctx *core.Context) (*model.Account, error) {
+	currentAccount, ok := ctx.CurrentAccount.(*model.Account)
+	if !ok {
+		err := fmt.Errorf(errormessage.ErrTypeAssertionFailedText, ctx.CurrentAccount)
+		return nil, err
+	}
+
+	return currentAccount, nil
 }

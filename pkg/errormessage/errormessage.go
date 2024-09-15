@@ -33,6 +33,7 @@ const (
 	ErrInvalidTokenTypeText             = "invalid token type"
 	ErrWrongOldPasswordText             = "wrong old password"
 	ErrInvalidSaltLengthText            = "invalid salt length"
+	ErrTypeAssertionFailedText          = "type assertion to *model.Account failed, got %T"
 )
 
 var (
