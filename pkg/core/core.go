@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
+	"github.com/arifai/zenith/internal/account/domain/model"
 	"github.com/gin-gonic/gin"
 )
 

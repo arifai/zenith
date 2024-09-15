@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
-	"github.com/arifai/go-modular-monolithic/pkg/api"
-	"github.com/arifai/go-modular-monolithic/pkg/database"
-	"github.com/arifai/go-modular-monolithic/pkg/utils"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/internal/account/domain/model"
+	"github.com/arifai/zenith/pkg/api"
+	"github.com/arifai/zenith/pkg/database"
+	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 )

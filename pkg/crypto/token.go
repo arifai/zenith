@@ -3,7 +3,7 @@ package crypto
 import (
 	"aidanwoods.dev/go-paseto"
 	"errors"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
 	"log"
 	"time"

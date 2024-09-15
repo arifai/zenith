@@ -3,8 +3,8 @@ package common
 import (
 	"errors"
 	"fmt"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
-	"github.com/arifai/go-modular-monolithic/pkg/utils"
+	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"

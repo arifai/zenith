@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/pkg/errormessage"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

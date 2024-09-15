@@ -1,4 +1,4 @@
-module github.com/arifai/go-modular-monolithic
+module github.com/arifai/zenith
 
 go 1.23.1
 

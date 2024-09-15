@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/internal/account/api/types"
-	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
-	"github.com/arifai/go-modular-monolithic/pkg/crypto"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/internal/account/api/types"
+	"github.com/arifai/zenith/internal/account/domain/model"
+	"github.com/arifai/zenith/pkg/crypto"
+	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

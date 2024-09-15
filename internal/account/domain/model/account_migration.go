@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/arifai/go-modular-monolithic/pkg/crypto"
+	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"log"

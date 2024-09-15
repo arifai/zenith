@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/internal/account/api/handler"
-	"github.com/arifai/go-modular-monolithic/internal/middleware"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/internal/account/api/handler"
+	"github.com/arifai/zenith/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

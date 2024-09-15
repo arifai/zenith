@@ -2,12 +2,12 @@ package service
 
 import (
 	"fmt"
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/internal/account/api/types"
-	"github.com/arifai/go-modular-monolithic/internal/account/domain/model"
-	"github.com/arifai/go-modular-monolithic/internal/account/domain/repository"
-	"github.com/arifai/go-modular-monolithic/pkg/core"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/internal/account/api/types"
+	"github.com/arifai/zenith/internal/account/domain/model"
+	"github.com/arifai/zenith/internal/account/domain/repository"
+	"github.com/arifai/zenith/pkg/core"
+	"github.com/arifai/zenith/pkg/errormessage"
 	"gorm.io/gorm"
 )
 

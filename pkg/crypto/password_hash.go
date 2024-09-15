@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	"github.com/arifai/go-modular-monolithic/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/errormessage"
 	"golang.org/x/crypto/argon2"
 	"log"
 	"strings"

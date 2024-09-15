@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/arifai/go-modular-monolithic/config"
+	"github.com/arifai/zenith/config"
 	"html/template"
 	"net/smtp"
 	"sync"

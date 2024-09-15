@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/arifai/go-modular-monolithic/config"
-	"github.com/arifai/go-modular-monolithic/internal/account/api/router"
+	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/internal/account/api/router"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
