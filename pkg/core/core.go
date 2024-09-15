@@ -5,29 +5,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Context is a struct that holds the Gin context and the current account information.
+// Context holds the Gin context and current account information.
 type Context struct {
 	Gin            *gin.Context
 	CurrentAccount interface{}
 }
 
-// NewContext retrieves the account from the gin.Context and returns a new Context instance containing the account details.
+// NewContext returns a new Context instance with account details from the gin.Context.
 func NewContext(ctx *gin.Context) *Context {
-	account, exists := ctx.Get("account")
-	if !exists {
-		return &Context{
-			Gin:            ctx,
-			CurrentAccount: nil,
-		}
-	}
-
-	acc, ok := account.(*model.Account)
-	if !ok {
-		return &Context{
-			Gin:            ctx,
-			CurrentAccount: nil,
-		}
-	}
+	account, _ := ctx.Get("account")
+	acc, _ := account.(*model.Account)
 
 	return &Context{
 		Gin:            ctx,
