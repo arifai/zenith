@@ -19,21 +19,27 @@ type Config struct {
 	PasswordSalt     string `env:"PASSWORD_SALT"`
 }
 
+// SMTPConfig holds the configuration details required to connect to an SMTP server.
+type SMTPConfig struct {
+	Host     string `env:"SMTP_HOST"`
+	Port     int    `env:"SMTP_PORT"`
+	Username string `env:"SMTP_USERNAME"`
+	Password string `env:"SMTP_PASSWORD"`
+}
+
 var (
 	SecretKey = paseto.NewV4AsymmetricSecretKey()
 	PublicKey = SecretKey.Public()
 )
 
-// Load loads the configuration from the provided `.env` files and environment variables, then returns the config struct.
-// It logs a fatal error if the `.env` files or environment variables cannot be loaded.
+// Load loads the configuration from the provided `.env` files and environment variables.
 func Load(filenames ...string) (config Config) {
 	if err := godotenv.Load(filenames...); err != nil {
 		log.Fatalf("Error loading `.env` file: %v", err)
 	}
 
-	_, envErr := env.UnmarshalFromEnviron(&config)
-	if envErr != nil {
-		log.Fatalf("Failed to load environment variables: %v", envErr)
+	if _, err := env.UnmarshalFromEnviron(&config); err != nil {
+		log.Fatalf("Failed to load environment variables: %v", err)
 	}
 
 	return config
