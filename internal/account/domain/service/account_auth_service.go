@@ -32,47 +32,53 @@ func (a AccountAuthService) Authorize(payload *types.AccountAuthRequest) (*commo
 	account, err := a.repo.FindByEmail(payload.Email)
 	if err != nil {
 		return nil, errormessage.ErrEmailAddressNotFound
-	} else if !account.Active {
+	}
+	if !account.Active {
 		return nil, errormessage.ErrAccountNotActive
-	} else if account.AccountPassHashed == nil {
+	}
+	if account.AccountPassHashed == nil {
 		return nil, errormessage.ErrAccountPasswordHashMissing
 	}
-
 	valid, err := crypto.VerifyHash(payload.Password, account.AccountPassHashed.PassHashed)
 	if err != nil {
 		return nil, err
-	} else if !valid {
+	}
+	if !valid {
 		return nil, errormessage.ErrIncorrectPassword
 	}
 
-	tn := time.Now()
-	accessTokenPayload := crypto.TokenPayload{
-		Jti:       uuid.New(),
-		AccountId: account.ID,
-		IssuedAt:  tn,
-		NotBefore: tn,
-		ExpiresAt: tn.Add(time.Hour * 24),
-		TokenType: "access_token",
+	accessToken, err := a.generateToken(account.ID, "access_token", time.Hour*24)
+	if err != nil {
+		return nil, err
 	}
 
-	accessToken := accessTokenPayload.GenerateToken(config.SecretKey)
-	if accessToken == "" {
-		return nil, errormessage.ErrFailedToGenerateAccessToken
-	}
-
-	refreshTokenPayload := crypto.TokenPayload{
-		Jti:       uuid.New(),
-		AccountId: account.ID,
-		IssuedAt:  tn,
-		NotBefore: tn,
-		ExpiresAt: tn.Add(time.Hour * 168),
-		TokenType: "refresh_token",
-	}
-
-	refreshToken := refreshTokenPayload.GenerateToken(config.SecretKey)
-	if refreshToken == "" {
-		return nil, errormessage.ErrFailedToGenerateRefreshToken
+	refreshToken, err := a.generateToken(account.ID, "refresh_token", time.Hour*168)
+	if err != nil {
+		return nil, err
 	}
 
 	return &common.AuthResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
+}
+
+// generateToken creates a token with specified type and duration
+func (a AccountAuthService) generateToken(accountID uuid.UUID, tokenType string, duration time.Duration) (string, error) {
+	now := time.Now()
+	payload := crypto.TokenPayload{
+		Jti:       uuid.New(),
+		AccountId: accountID,
+		IssuedAt:  now,
+		NotBefore: now,
+		ExpiresAt: now.Add(duration),
+		TokenType: tokenType,
+	}
+	token := payload.GenerateToken(config.SecretKey)
+	if token == "" {
+		switch tokenType {
+		case "access_token":
+			return "", errormessage.ErrFailedToGenerateAccessToken
+		case "refresh_token":
+			return "", errormessage.ErrFailedToGenerateRefreshToken
+		}
+	}
+	return token, nil
 }
