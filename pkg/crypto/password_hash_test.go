@@ -1,15 +1,16 @@
 package crypto
 
 import (
-	"errors"
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 type MockArgon2IdHash struct {
 	mock.Mock
+	Argon2IdHash
 }
 
 func (m *MockArgon2IdHash) GenerateHash(password, salt []byte) (string, error) {
@@ -17,54 +18,67 @@ func (m *MockArgon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-var password = []byte(faker.Password())
-var salt = []byte(faker.Word())
+func TestGenerateHash(t *testing.T) {
+	password := []byte(faker.Password())
+	salt := []byte(faker.Word())
+	hashedPassword := faker.Password()
 
-func TestMockArgon2IdHashGenerateHash(t *testing.T) {
-	t.Parallel()
+	mockArgon2IdHash := new(MockArgon2IdHash)
+	mockArgon2IdHash.On("GenerateHash", password, salt).Return(hashedPassword, nil)
 
-	testCases := []struct {
-		name         string
-		password     []byte
-		salt         []byte
-		expectedHash string
-		expectedErr  error
-		mockSetup    func(m *MockArgon2IdHash)
+	result, err := mockArgon2IdHash.GenerateHash(password, salt)
+
+	assert.NoError(t, err)
+	assert.Equal(t, hashedPassword, result)
+
+	mockArgon2IdHash.AssertExpectations(t)
+}
+
+func TestVerifyHash(t *testing.T) {
+	password := faker.Password()
+
+	argon2IdHash := &Argon2IdHash{
+		Time:    1,
+		Memory:  512,
+		Threads: 2,
+		KeyLen:  16,
+		SaltLen: 16,
+	}
+
+	generatedHash, err := argon2IdHash.GenerateHash([]byte(password), nil)
+	require.NoError(t, err, "Failed to generate hash")
+
+	tests := []struct {
+		name           string
+		password       string
+		hashedPassword string
+		expectedResult bool
 	}{
 		{
-			name:         "ValidHash",
-			password:     password,
-			salt:         salt,
-			expectedHash: "HashedPassword",
-			expectedErr:  nil,
-			mockSetup: func(m *MockArgon2IdHash) {
-				m.On("GenerateHash", password, salt).Return("HashedPassword", nil).Once()
-			},
+			name:           "SuccessfulValidation",
+			password:       password,
+			hashedPassword: generatedHash,
+			expectedResult: true,
 		},
 		{
-			name:         "ErrorGeneratingHash",
-			password:     password,
-			salt:         salt,
-			expectedHash: "",
-			expectedErr:  errors.New("error generating hash"),
-			mockSetup: func(m *MockArgon2IdHash) {
-				m.On("GenerateHash", password, salt).Return("", errors.New("error generating hash")).Once()
-			},
+			name:           "InvalidPassword",
+			password:       faker.Password(),
+			hashedPassword: generatedHash,
+			expectedResult: false,
+		},
+		{
+			name:           "InvalidHashFormat",
+			password:       faker.Password(),
+			hashedPassword: "$argon2i$v=19$invalid_hash$format",
+			expectedResult: false,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			mockArgon2IdHash := new(MockArgon2IdHash)
-			tc.mockSetup(mockArgon2IdHash)
-
-			hash, err := mockArgon2IdHash.GenerateHash(tc.password, tc.salt)
-
-			assert.Equal(t, tc.expectedHash, hash)
-			assert.Equal(t, tc.expectedErr, err)
-
-			mockArgon2IdHash.AssertExpectations(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, _ := VerifyHash(tt.password, tt.hashedPassword)
+			assert.NoError(t, err, "Verification resulted in an error")
+			assert.Equal(t, tt.expectedResult, result)
 		})
 	}
 }

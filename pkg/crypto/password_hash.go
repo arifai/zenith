@@ -24,9 +24,6 @@ type Argon2IdHash struct {
 // memory, threads, key length, and salt length.
 var DefaultArgon2IDHash = &Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}
 
-// SaltSize is the size of the generated salt
-const SaltSize = 32
-
 // Argon2Version is the version of the argon2 algorithm
 const Argon2Version = argon2.Version
 
