@@ -21,6 +21,11 @@ type AccountAuthRequest struct {
 	Password string `json:"password" validate:"required,min=8,max=100"`
 }
 
+type AccountUnauthRequest struct {
+	AccessToken  string `json:"access_token" validate:"required"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 // AccountUpdatePasswordRequest represents a request to update an account password.
 type AccountUpdatePasswordRequest struct {
 	OldPassword string `json:"old_password" validate:"required,min=8,max=100"`

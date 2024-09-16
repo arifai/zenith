@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/internal/account/domain/model"
 	"github.com/arifai/zenith/internal/account/domain/repository"
@@ -10,13 +9,14 @@ import (
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"strings"
 )
 
 // Middleware is a Gin middleware for validating access tokens from Authorization headers and setting authorized account context.
-func Middleware(db *gorm.DB) gin.HandlerFunc {
-	repo := repository.NewAccountRepository(db)
+func Middleware(db *gorm.DB, redisClient *redis.Client) gin.HandlerFunc {
+	repo := repository.NewAccountRepository(db, redisClient)
 	return func(ctx *gin.Context) {
 		resp := common.Response{}
 		if account, err := validateAndExtractAccount(ctx, repo); err != nil {
@@ -33,7 +33,7 @@ func Middleware(db *gorm.DB) gin.HandlerFunc {
 func validateAndExtractAccount(ctx *gin.Context, repo *repository.AccountRepository) (*model.Account, error) {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
-		return nil, errors.New(errormessage.ErrMissingAuthorizationHeaderText)
+		return nil, errormessage.ErrMissingAuthorizationHeader
 	}
 
 	tokenString, err := extractToken(authHeader)
@@ -47,13 +47,21 @@ func validateAndExtractAccount(ctx *gin.Context, repo *repository.AccountReposit
 	}
 
 	if tokenPayload.TokenType != "access_token" {
-		return nil, errors.New(errormessage.ErrInvalidTokenTypeText)
+		return nil, errormessage.ErrInvalidTokenType
+	}
+
+	isTokenBlacklisted, err := repo.IsTokenBlacklisted(tokenPayload.Jti.String())
+	if err != nil {
+		return nil, err
+	} else if isTokenBlacklisted {
+		return nil, errormessage.ErrInvalidAccessToken
 	}
 
 	account, err := repo.Find(tokenPayload.AccountId)
 	if err != nil {
-		return nil, errors.New(errormessage.ErrCannotFindAuthorizedAccountText)
+		return nil, errormessage.ErrCannotFindAuthorizedAccount
 	}
+
 	return account, nil
 }
 
@@ -61,7 +69,8 @@ func validateAndExtractAccount(ctx *gin.Context, repo *repository.AccountReposit
 func extractToken(authHeader string) (string, error) {
 	tokenParts := strings.Split(authHeader, " ")
 	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		return "", errors.New(errormessage.ErrInvalidAccessTokenText)
+		return "", errormessage.ErrInvalidAccessToken
 	}
+
 	return tokenParts[1], nil
 }

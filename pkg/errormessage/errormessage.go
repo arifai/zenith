@@ -48,4 +48,8 @@ var (
 	ErrIncompatibleArgon2Version    = errors.New(ErrIncompatibleArgon2VersionText)
 	ErrWrongOldPassword             = errors.New(ErrWrongOldPasswordText)
 	ErrInvalidSaltLength            = errors.New(ErrInvalidSaltLengthText)
+	ErrMissingAuthorizationHeader   = errors.New(ErrMissingAuthorizationHeaderText)
+	ErrInvalidTokenType             = errors.New(ErrInvalidTokenTypeText)
+	ErrInvalidAccessToken           = errors.New(ErrInvalidAccessTokenText)
+	ErrCannotFindAuthorizedAccount  = errors.New(ErrCannotFindAuthorizedAccountText)
 )

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/internal/account/api/types"
 	"github.com/arifai/zenith/internal/account/domain/repository"
@@ -8,21 +9,24 @@ import (
 	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"time"
 )
 
 // AccountAuthService is used for handling account authorization processes.
 type AccountAuthService struct {
-	config *config.Config
-	repo   *repository.AccountRepository
+	defaultConfig *config.Config
+	redisClient   *redis.Client
+	repo          *repository.AccountRepository
 }
 
 // NewAccountAuthService initializes an AccountAuthService with a given database connection and configuration settings.
-func NewAccountAuthService(db *gorm.DB, config *config.Config) *AccountAuthService {
+func NewAccountAuthService(db *gorm.DB, defaultConfig *config.Config, redisClient *redis.Client) *AccountAuthService {
 	return &AccountAuthService{
-		config: config,
-		repo:   repository.NewAccountRepository(db),
+		defaultConfig: defaultConfig,
+		redisClient:   redisClient,
+		repo:          repository.NewAccountRepository(db, redisClient),
 	}
 }
 
@@ -58,6 +62,31 @@ func (a AccountAuthService) Authorize(payload *types.AccountAuthRequest) (*commo
 	}
 
 	return &common.AuthResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
+}
+
+// Unauthorized invalidates an access token by verifying it and adding it to the blacklist.
+func (a AccountAuthService) Unauthorized(token string) error {
+	verifyToken, err := crypto.VerifyToken(token, config.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	if err = a.blacklistToken(verifyToken.Jti.String(), verifyToken.ExpiresAt); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// blacklistToken blacklists a Paseto by storing its jti in Redis with an expiration time.
+func (a AccountAuthService) blacklistToken(jti string, exp time.Time) error {
+	ttl := time.Until(exp)
+	err := a.redisClient.Set(context.Background(), jti, "blacklisted", ttl).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // generateToken creates a token with specified type and duration

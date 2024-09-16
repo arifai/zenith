@@ -8,20 +8,23 @@ import (
 	"github.com/arifai/zenith/internal/account/domain/repository"
 	"github.com/arifai/zenith/pkg/core"
 	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 // AccountService provides methods to manage user accounts.
 type AccountService struct {
-	cfg  *config.Config
-	repo *repository.AccountRepository
+	cfg         *config.Config
+	redisClient *redis.Client
+	repo        *repository.AccountRepository
 }
 
 // NewAccountService initializes a new AccountService with the given database context and configuration settings.
-func NewAccountService(db *gorm.DB, cfg *config.Config) *AccountService {
+func NewAccountService(db *gorm.DB, cfg *config.Config, redisClient *redis.Client) *AccountService {
 	return &AccountService{
-		cfg:  cfg,
-		repo: repository.NewAccountRepository(db),
+		cfg:         cfg,
+		redisClient: redisClient,
+		repo:        repository.NewAccountRepository(db, redisClient),
 	}
 }
 
