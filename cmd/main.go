@@ -14,9 +14,10 @@ func main() {
 	envLoader := config.NewEnv(config.Config{}, config.SMTPConfig{}, config.RedisConfig{})
 	defConfig := envLoader.LoadDefault()
 	db := database.ConnectDatabase(defConfig)
+	rdb := database.ConnectRedis(envLoader.LoadRedis())
 	router := gin.Default()
+	api.SetupRouter(router, db, &defConfig, rdb)
 	model.AccountMigration(db)
-	api.SetupRouter(router, db, &defConfig)
 	utils.SetupTranslation()
 
 	trustedProxiesErr := router.SetTrustedProxies([]string{"127.0.0.1"})
