@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    target-branch: develop
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: bump
+      prefix-development: bump
+      include: scope
+    schedule:
+      interval: weekly
+      day: monday
+      time: 09:00
+      timezone: Asia/Jakarta
+    reviewers:
+      - arifai
+    assignees:
+      - arifai
+    labels:
+      - bump
+      - dependabot
+      - dependencies
