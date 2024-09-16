@@ -84,9 +84,12 @@ func (repo *AccountRepository) Update(id uuid.UUID, payload *types.AccountUpdate
 		return nil, err
 	}
 
-	account.FullName = payload.FullName
-	account.Email = payload.Email
-
+	if payload.FullName != "" {
+		account.FullName = payload.FullName
+	}
+	if payload.Email != "" {
+		account.Email = payload.Email
+	}
 	return account.Update(repo.db)
 }
 
