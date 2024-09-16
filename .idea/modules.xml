@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/go-modular-monolithic.iml" filepath="$PROJECT_DIR$/.idea/go-modular-monolithic.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/zenith.iml" filepath="$PROJECT_DIR$/.idea/zenith.iml" />
     </modules>
   </component>
 </project>
