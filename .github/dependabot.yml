@@ -11,7 +11,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: 09:00
+      time: "09:00"
       timezone: Asia/Jakarta
     reviewers:
       - arifai
