@@ -18,7 +18,7 @@ type (
 	ResponseModel struct {
 		Code    int            `json:"code"`
 		Message string         `json:"message"`
-		Errors  []utils.IError `json:"errormessage"`
+		Errors  []utils.IError `json:"errors"`
 		Result  any            `json:"result"`
 	}
 
