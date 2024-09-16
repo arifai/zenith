@@ -14,8 +14,11 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config) {
 
 	authAccountGroup := group.Group("/auth/account")
 	{
+		authAccountGroup.POST("/registration", func(context *gin.Context) {
+			accountHandler.RegisterAccountHandler(context, config)
+		})
 		authAccountGroup.POST("/authorization", accountHandler.AuthHandler)
-		authAccountGroup.POST("/registration", accountHandler.RegisterAccountHandler)
+		authAccountGroup.POST("/unauthorization")
 	}
 
 	accountGroup := group.Group("/account")
@@ -23,6 +26,8 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config) {
 	{
 		accountGroup.GET("/me", accountHandler.GetAccountHandler)
 		accountGroup.PATCH("/me/update", accountHandler.UpdateAccountHandler)
-		accountGroup.PUT("/me/update_password", accountHandler.UpdatePasswordAccountHandler)
+		accountGroup.PUT("/me/update_password", func(context *gin.Context) {
+			accountHandler.UpdatePasswordAccountHandler(context, config)
+		})
 	}
 }

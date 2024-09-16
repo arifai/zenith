@@ -11,8 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var passwordSalt = config.Load().PasswordSalt
-
 // AccountRepository handles CRUD operations for account data in the database.
 type AccountRepository struct {
 	db *gorm.DB
@@ -24,7 +22,7 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 }
 
 // CreateAccount registers a new user account in the system using the provided payload data.
-func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
+func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest, config *config.Config) (*model.Account, error) {
 	m := new(model.Account)
 	exists, err := m.EmailExists(repo.db, payload.Email)
 	if err != nil {
@@ -33,7 +31,7 @@ func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest
 		return nil, errormessage.ErrEmailAlreadyExists
 	}
 
-	hash, err := generatePasswordHash(payload.Password)
+	hash, err := generatePasswordHash(payload.Password, config.PasswordSalt)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +45,8 @@ func (repo *AccountRepository) CreateAccount(payload *types.AccountCreateRequest
 	return account.CreateAccount(repo.db)
 }
 
-func generatePasswordHash(password string) (string, error) {
-	return crypto.DefaultArgon2IDHash.GenerateHash([]byte(password), []byte(passwordSalt))
+func generatePasswordHash(password, salt string) (string, error) {
+	return crypto.DefaultArgon2IDHash.GenerateHash([]byte(password), []byte(salt))
 }
 
 // Find retrieves an account by its uuid.UUID from the database.
@@ -85,7 +83,7 @@ func (repo *AccountRepository) Update(id uuid.UUID, payload *types.AccountUpdate
 }
 
 // UpdatePassword updates the password for an existing account identified by id.
-func (repo *AccountRepository) UpdatePassword(id uuid.UUID, payload *types.AccountUpdatePasswordRequest) (*model.Account, error) {
+func (repo *AccountRepository) UpdatePassword(id uuid.UUID, payload *types.AccountUpdatePasswordRequest, config *config.Config) (*model.Account, error) {
 	account, err := repo.Find(id)
 	if err != nil {
 		return nil, err
@@ -96,7 +94,7 @@ func (repo *AccountRepository) UpdatePassword(id uuid.UUID, payload *types.Accou
 		return nil, errormessage.ErrWrongOldPassword
 	}
 
-	hash, err := generatePasswordHash(payload.NewPassword)
+	hash, err := generatePasswordHash(payload.NewPassword, config.PasswordSalt)
 	if err != nil {
 		return nil, err
 	}

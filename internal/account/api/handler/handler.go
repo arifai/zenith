@@ -62,7 +62,7 @@ func (a *AccountHandler) GetAccountHandler(ctx *gin.Context) {
 
 // RegisterAccountHandler handles the registration of a new user account by validating the request
 // body, invoking the account service to create the account, and sending an appropriate response.
-func (a *AccountHandler) RegisterAccountHandler(ctx *gin.Context) {
+func (a *AccountHandler) RegisterAccountHandler(ctx *gin.Context, config *config.Config) {
 	accountService := service.NewAccountService(a.db, a.config)
 	body, err := utils.ValidateBody[types.AccountCreateRequest](ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func (a *AccountHandler) RegisterAccountHandler(ctx *gin.Context) {
 		return
 	}
 
-	result, err := accountService.CreateAccount(body)
+	result, err := accountService.CreateAccount(body, config)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -101,7 +101,7 @@ func (a *AccountHandler) UpdateAccountHandler(ctx *gin.Context) {
 
 // UpdatePasswordAccountHandler handles the password update request for an account.
 // It validates the request body, calls the account service to update the password, and sends the appropriate response.
-func (a *AccountHandler) UpdatePasswordAccountHandler(ctx *gin.Context) {
+func (a *AccountHandler) UpdatePasswordAccountHandler(ctx *gin.Context, config *config.Config) {
 	accountService := service.NewAccountService(a.db, a.config)
 	context := core.NewContext(ctx)
 	body, err := utils.ValidateBody[types.AccountUpdatePasswordRequest](ctx)
@@ -110,7 +110,7 @@ func (a *AccountHandler) UpdatePasswordAccountHandler(ctx *gin.Context) {
 		return
 	}
 
-	result, err := accountService.UpdatePassword(context, body)
+	result, err := accountService.UpdatePassword(context, body, config)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return

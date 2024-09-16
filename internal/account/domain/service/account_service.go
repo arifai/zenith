@@ -26,8 +26,8 @@ func NewAccountService(db *gorm.DB, cfg *config.Config) *AccountService {
 }
 
 // CreateAccount registers a new user account in the system using the provided payload data.
-func (s *AccountService) CreateAccount(payload *types.AccountCreateRequest) (*model.Account, error) {
-	return s.repo.CreateAccount(payload)
+func (s *AccountService) CreateAccount(payload *types.AccountCreateRequest, config *config.Config) (*model.Account, error) {
+	return s.repo.CreateAccount(payload, config)
 }
 
 // GetAccount retrieves the current account from the given context.
@@ -46,13 +46,13 @@ func (s *AccountService) UpdateAccount(ctx *core.Context, payload *types.Account
 }
 
 // UpdatePassword changes the password for the current account using the provided payload.
-func (s *AccountService) UpdatePassword(ctx *core.Context, payload *types.AccountUpdatePasswordRequest) (*model.Account, error) {
+func (s *AccountService) UpdatePassword(ctx *core.Context, payload *types.AccountUpdatePasswordRequest, config *config.Config) (*model.Account, error) {
 	currentAccount, err := s.getCurrentAccount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.repo.UpdatePassword(currentAccount.ID, payload)
+	return s.repo.UpdatePassword(currentAccount.ID, payload, config)
 }
 
 // getCurrentAccount retrieves and asserts the current account from the context.

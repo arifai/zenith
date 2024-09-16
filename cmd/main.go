@@ -11,11 +11,12 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
-	db := database.ConnectDatabase(cfg)
+	envLoader := config.NewEnv(config.Config{}, config.SMTPConfig{}, config.RedisConfig{})
+	defConfig := envLoader.LoadDefault()
+	db := database.ConnectDatabase(defConfig)
 	router := gin.Default()
 	model.AccountMigration(db)
-	api.SetupRouter(router, db, &cfg)
+	api.SetupRouter(router, db, &defConfig)
 	utils.SetupTranslation()
 
 	trustedProxiesErr := router.SetTrustedProxies([]string{"127.0.0.1"})
