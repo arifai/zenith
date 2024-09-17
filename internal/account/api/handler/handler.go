@@ -53,13 +53,13 @@ func (a *AccountHandler) AuthHandler(ctx *gin.Context) {
 func (a *AccountHandler) UnauthHandler(ctx *gin.Context) {
 	accountAuthService := a.initializeAccountAuthService()
 
-	body, err := utils.ValidateBody[types.AccountUnauthRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountUnauthRefreshRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
 
-	if err := a.handleUnauthorizedTokens(accountAuthService, body); err != nil {
+	if err := a.handleUnauthorizedTokens(accountAuthService, payload); err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
@@ -67,22 +67,28 @@ func (a *AccountHandler) UnauthHandler(ctx *gin.Context) {
 	a.resp.Success(ctx, nil)
 }
 
-// initializeAccountAuthService initializes and returns an AccountAuthService instance using the AccountHandler's dependencies.
-func (a *AccountHandler) initializeAccountAuthService() *service.AccountAuthService {
-	return service.NewAccountAuthService(a.db, a.config, a.redisClient)
-}
-
-// handleUnauthorizedTokens invalidates both access and refresh tokens using the AccountAuthService and returns an error if any.
-func (a *AccountHandler) handleUnauthorizedTokens(accountAuthService *service.AccountAuthService, request *types.AccountUnauthRequest) error {
-	if err := accountAuthService.Unauthorized(request.AccessToken); err != nil {
-		return err
+func (a *AccountHandler) RefreshTokenHandler(ctx *gin.Context) {
+	accountAuthService := a.initializeAccountAuthService()
+	accountService := service.NewAccountService(a.db, a.config, a.redisClient)
+	payload, err := utils.ValidateBody[types.AccountUnauthRefreshRequest](ctx)
+	if err != nil {
+		a.resp.Error(ctx, err)
+		return
 	}
 
-	if err := accountAuthService.Unauthorized(request.RefreshToken); err != nil {
-		return err
+	account, err := accountService.GetAccount(core.NewContext(ctx))
+	if err != nil {
+		a.resp.Error(ctx, err)
+		return
 	}
 
-	return nil
+	result, err := accountAuthService.RefreshToken(account.ID, payload)
+	if err != nil {
+		a.resp.Error(ctx, err)
+		return
+	}
+
+	a.resp.Authorized(ctx, result)
 }
 
 // GetAccountHandler retrieves the current user's account details. It initializes account service and context,
@@ -156,4 +162,22 @@ func (a *AccountHandler) UpdatePasswordAccountHandler(ctx *gin.Context) {
 	}
 
 	a.resp.Success(ctx, result)
+}
+
+// initializeAccountAuthService initializes and returns an AccountAuthService instance using the AccountHandler's dependencies.
+func (a *AccountHandler) initializeAccountAuthService() *service.AccountAuthService {
+	return service.NewAccountAuthService(a.db, a.config, a.redisClient)
+}
+
+// handleUnauthorizedTokens invalidates both access and refresh tokens using the AccountAuthService and returns an error if any.
+func (a *AccountHandler) handleUnauthorizedTokens(accountAuthService *service.AccountAuthService, payload *types.AccountUnauthRefreshRequest) error {
+	if err := accountAuthService.Unauthorized(payload.AccessToken); err != nil {
+		return err
+	}
+
+	if err := accountAuthService.Unauthorized(payload.RefreshToken); err != nil {
+		return err
+	}
+
+	return nil
 }

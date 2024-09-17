@@ -13,7 +13,7 @@ const (
 	ErrInvalidEncodedHashText           = "invalid encoded hash"
 	ErrIncompatibleArgon2VersionText    = "incompatible argon2 version"
 	ErrMissingAuthorizationHeaderText   = "authorization header missing"
-	ErrInvalidAccessTokenText           = "invalid access token"
+	ErrInvalidTokenHashText             = "invalid token hash"
 	ErrCannotFindAuthorizedAccountText  = "cannot find authorized account"
 	ErrParsingRequestDataText           = "failed to parsing request data"
 	ErrFailedToConnectDBText            = "failed to connect to database"
@@ -34,6 +34,8 @@ const (
 	ErrWrongOldPasswordText             = "wrong old password"
 	ErrInvalidSaltLengthText            = "invalid salt length"
 	ErrTypeAssertionFailedText          = "type assertion to *model.Account failed, got %T"
+	ErrInvalidAccessTokenInBodyText     = "invalid access token in body, maybe your token has expired"
+	ErrInvalidRefreshTokenInBodyText    = "invalid refresh token in body, maybe your token has expired"
 )
 
 var (
@@ -50,6 +52,8 @@ var (
 	ErrInvalidSaltLength            = errors.New(ErrInvalidSaltLengthText)
 	ErrMissingAuthorizationHeader   = errors.New(ErrMissingAuthorizationHeaderText)
 	ErrInvalidTokenType             = errors.New(ErrInvalidTokenTypeText)
-	ErrInvalidAccessToken           = errors.New(ErrInvalidAccessTokenText)
+	ErrInvalidAccessToken           = errors.New(ErrInvalidTokenHashText)
 	ErrCannotFindAuthorizedAccount  = errors.New(ErrCannotFindAuthorizedAccountText)
+	ErrInvalidAccessTokenInBody     = errors.New(ErrInvalidAccessTokenInBodyText)
+	ErrInvalidRefreshTokenInBody    = errors.New(ErrInvalidRefreshTokenInBodyText)
 )
