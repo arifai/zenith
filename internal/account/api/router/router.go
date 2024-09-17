@@ -18,6 +18,7 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config, r
 		accountAuthGroup.POST("/registration", accountHandler.RegisterAccountHandler)
 		accountAuthGroup.POST("/authorization", accountHandler.AuthHandler)
 		accountAuthGroup.POST("/unauthorization", middlewareFunc, accountHandler.UnauthHandler)
+		// @FIXME: `refresh_token` no need middleware
 		accountAuthGroup.POST("/refresh_token", middlewareFunc, accountHandler.RefreshTokenHandler)
 	}
 
