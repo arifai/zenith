@@ -23,7 +23,6 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config, r
 	}
 
 	setupAccountRoutes := func(accountGroup *gin.RouterGroup) {
-		accountGroup.Use(middlewareFunc)
 		accountGroup.GET("/me", accountHandler.GetAccountHandler)
 		accountGroup.PATCH("/me/update", accountHandler.UpdateAccountHandler)
 		accountGroup.PUT("/me/update_password", accountHandler.UpdatePasswordAccountHandler)
@@ -32,6 +31,6 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config, r
 	authGroup := group.Group("/auth/account")
 	setupAccountAuthRoutes(authGroup)
 
-	accountGroup := group.Group("/account")
+	accountGroup := group.Group("/account", middlewareFunc)
 	setupAccountRoutes(accountGroup)
 }
