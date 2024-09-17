@@ -56,14 +56,23 @@ func (a AccountAuthService) Authorize(payload *types.AccountAuthRequest) (*commo
 	return &common.AuthResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
-// Unauthorized invalidates an access token by verifying it and adding it to the blacklist.
-func (a AccountAuthService) Unauthorized(token string) error {
-	verifyToken, err := crypto.VerifyToken(token, config.PublicKey)
+// Unauthorized invalidates the access and refresh tokens provided in the payload by blacklisting them while account is logout
+func (a AccountAuthService) Unauthorized(payload *types.AccountUnauthRequest) error {
+	verifyAccessToken, err := crypto.VerifyToken(payload.AccessToken, config.PublicKey)
 	if err != nil {
+		return errormessage.ErrInvalidAccessTokenInBody
+	}
+
+	if err = a.blacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
 		return err
 	}
 
-	if err = a.blacklistToken(verifyToken.Jti.String(), verifyToken.ExpiresAt); err != nil {
+	verifyRefreshToken, err := crypto.VerifyToken(payload.RefreshToken, config.PublicKey)
+	if err != nil {
+		return errormessage.ErrInvalidRefreshTokenInBody
+	}
+
+	if err := a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
 		return err
 	}
 
@@ -71,7 +80,7 @@ func (a AccountAuthService) Unauthorized(token string) error {
 }
 
 // RefreshToken generates new access and refresh tokens for the given account ID and payload, invalidating the old tokens.
-func (a AccountAuthService) RefreshToken(id uuid.UUID, payload *types.AccountUnauthRefreshRequest) (*common.AuthResponse, error) {
+func (a AccountAuthService) RefreshToken(id uuid.UUID, payload *types.AccountRefreshTokenRequest) (*common.AuthResponse, error) {
 	accessToken, err := a.generateToken(id, "access_token", time.Hour*24)
 	if err != nil {
 		return nil, err
@@ -82,21 +91,12 @@ func (a AccountAuthService) RefreshToken(id uuid.UUID, payload *types.AccountUna
 		return nil, err
 	}
 
-	verifyAccessToken, err := crypto.VerifyToken(payload.AccessToken, config.PublicKey)
-	if err != nil {
-		return nil, errormessage.ErrInvalidAccessTokenInBody
-	}
-
-	if err := a.blacklistToken(verifyAccessToken.Jti.String(), time.Now()); err != nil {
-		return nil, err
-	}
-
 	verifyRefreshToken, err := crypto.VerifyToken(payload.RefreshToken, config.PublicKey)
 	if err != nil {
 		return nil, errormessage.ErrInvalidRefreshTokenInBody
 	}
 
-	if err := a.blacklistToken(verifyRefreshToken.Jti.String(), time.Now()); err != nil {
+	if err := a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
 		return nil, err
 	}
 
@@ -129,8 +129,7 @@ func (a AccountAuthService) validateAccount(account *model.Account, password str
 // blacklistToken adds the given token's identifier (jti) to the blacklist until the token's expiration time (exp).
 func (a AccountAuthService) blacklistToken(jti string, exp time.Time) error {
 	ttl := time.Until(exp)
-	err := a.redisClient.Set(context.Background(), jti, "blacklisted", ttl).Err()
-	if err != nil {
+	if err := a.redisClient.Set(context.Background(), jti, "blacklisted", ttl).Err(); err != nil {
 		return err
 	}
 

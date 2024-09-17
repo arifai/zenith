@@ -9,25 +9,28 @@ import (
 	"gorm.io/gorm"
 )
 
-// AccountRouter sets up all routes related to account operations under the provided gin.RouterGroup.
+// AccountRouter sets up route groups for account-related operations, including authentication and account management.
 func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config, redisClient *redis.Client) {
 	accountHandler := handler.NewAccountHandler(db, config, redisClient)
+	middlewareFunc := middleware.Middleware(db, redisClient)
 
-	authAccountGroup := group.Group("/auth/account")
-	{
-		authAccountGroup.POST("/registration", accountHandler.RegisterAccountHandler)
-		authAccountGroup.POST("/authorization", accountHandler.AuthHandler)
-		authAccountGroup.POST("/unauthorization", accountHandler.UnauthHandler).
-			Use(middleware.Middleware(db, redisClient))
-		authAccountGroup.POST("/refresh_token", accountHandler.RefreshTokenHandler).
-			Use(middleware.Middleware(db, redisClient))
+	setupAccountAuthRoutes := func(accountAuthGroup *gin.RouterGroup) {
+		accountAuthGroup.POST("/registration", accountHandler.RegisterAccountHandler)
+		accountAuthGroup.POST("/authorization", accountHandler.AuthHandler)
+		accountAuthGroup.POST("/unauthorization", middlewareFunc, accountHandler.UnauthHandler)
+		accountAuthGroup.POST("/refresh_token", middlewareFunc, accountHandler.RefreshTokenHandler)
 	}
 
-	accountGroup := group.Group("/account")
-	accountGroup.Use(middleware.Middleware(db, redisClient))
-	{
+	setupAccountRoutes := func(accountGroup *gin.RouterGroup) {
+		accountGroup.Use(middlewareFunc)
 		accountGroup.GET("/me", accountHandler.GetAccountHandler)
 		accountGroup.PATCH("/me/update", accountHandler.UpdateAccountHandler)
 		accountGroup.PUT("/me/update_password", accountHandler.UpdatePasswordAccountHandler)
 	}
+
+	authGroup := group.Group("/auth/account")
+	setupAccountAuthRoutes(authGroup)
+
+	accountGroup := group.Group("/account")
+	setupAccountRoutes(accountGroup)
 }

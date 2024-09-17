@@ -34,13 +34,13 @@ func NewAccountHandler(db *gorm.DB, config *config.Config, redisClient *redis.Cl
 // AuthHandler handles the authentication logic for user accounts, including request validation and response formatting.
 func (a *AccountHandler) AuthHandler(ctx *gin.Context) {
 	accountAuthService := service.NewAccountAuthService(a.db, a.config, a.redisClient)
-	body, err := utils.ValidateBody[types.AccountAuthRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountAuthRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
 
-	result, err := accountAuthService.Authorize(body)
+	result, err := accountAuthService.Authorize(payload)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -53,7 +53,7 @@ func (a *AccountHandler) AuthHandler(ctx *gin.Context) {
 func (a *AccountHandler) UnauthHandler(ctx *gin.Context) {
 	accountAuthService := a.initializeAccountAuthService()
 
-	payload, err := utils.ValidateBody[types.AccountUnauthRefreshRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountUnauthRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -67,10 +67,11 @@ func (a *AccountHandler) UnauthHandler(ctx *gin.Context) {
 	a.resp.Success(ctx, nil)
 }
 
+// RefreshTokenHandler handles the process of refreshing a Paseto token by validating the request and generating a new token.
 func (a *AccountHandler) RefreshTokenHandler(ctx *gin.Context) {
 	accountAuthService := a.initializeAccountAuthService()
 	accountService := service.NewAccountService(a.db, a.config, a.redisClient)
-	payload, err := utils.ValidateBody[types.AccountUnauthRefreshRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountRefreshTokenRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -109,13 +110,13 @@ func (a *AccountHandler) GetAccountHandler(ctx *gin.Context) {
 // body, invoking the account service to create the account, and sending an appropriate response.
 func (a *AccountHandler) RegisterAccountHandler(ctx *gin.Context) {
 	accountService := service.NewAccountService(a.db, a.config, a.redisClient)
-	body, err := utils.ValidateBody[types.AccountCreateRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountCreateRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
 
-	result, err := accountService.CreateAccount(body, a.config)
+	result, err := accountService.CreateAccount(payload, a.config)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -129,13 +130,13 @@ func (a *AccountHandler) RegisterAccountHandler(ctx *gin.Context) {
 func (a *AccountHandler) UpdateAccountHandler(ctx *gin.Context) {
 	accountService := service.NewAccountService(a.db, a.config, a.redisClient)
 	context := core.NewContext(ctx)
-	body, err := utils.ValidateBody[types.AccountUpdateRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountUpdateRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
 
-	result, err := accountService.UpdateAccount(context, body)
+	result, err := accountService.UpdateAccount(context, payload)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -149,13 +150,13 @@ func (a *AccountHandler) UpdateAccountHandler(ctx *gin.Context) {
 func (a *AccountHandler) UpdatePasswordAccountHandler(ctx *gin.Context) {
 	accountService := service.NewAccountService(a.db, a.config, a.redisClient)
 	context := core.NewContext(ctx)
-	body, err := utils.ValidateBody[types.AccountUpdatePasswordRequest](ctx)
+	payload, err := utils.ValidateBody[types.AccountUpdatePasswordRequest](ctx)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
 	}
 
-	result, err := accountService.UpdatePassword(context, body, a.config)
+	result, err := accountService.UpdatePassword(context, payload, a.config)
 	if err != nil {
 		a.resp.Error(ctx, err)
 		return
@@ -170,12 +171,8 @@ func (a *AccountHandler) initializeAccountAuthService() *service.AccountAuthServ
 }
 
 // handleUnauthorizedTokens invalidates both access and refresh tokens using the AccountAuthService and returns an error if any.
-func (a *AccountHandler) handleUnauthorizedTokens(accountAuthService *service.AccountAuthService, payload *types.AccountUnauthRefreshRequest) error {
-	if err := accountAuthService.Unauthorized(payload.AccessToken); err != nil {
-		return err
-	}
-
-	if err := accountAuthService.Unauthorized(payload.RefreshToken); err != nil {
+func (a *AccountHandler) handleUnauthorizedTokens(accountAuthService *service.AccountAuthService, payload *types.AccountUnauthRequest) error {
+	if err := accountAuthService.Unauthorized(payload); err != nil {
 		return err
 	}
 
