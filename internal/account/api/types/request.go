@@ -21,7 +21,8 @@ type AccountAuthRequest struct {
 	Password string `json:"password" validate:"required,min=8,max=100"`
 }
 
-type AccountUnauthRequest struct {
+// AccountUnauthRefreshRequest represents a request structure for refreshing tokens and account unauthenticated.
+type AccountUnauthRefreshRequest struct {
 	AccessToken  string `json:"access_token" validate:"required"`
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
