@@ -46,7 +46,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	parsedToken, err := parser.ParseV4Public(publicKeyHex, token, nil)
 	if err != nil {
 		log.Printf("%s: %v", errormessage.ErrFailedParseTokenText, err)
-		return nil, errors.New(errormessage.ErrInvalidAccessTokenText)
+		return nil, errors.New(errormessage.ErrInvalidTokenHashText)
 	}
 
 	jti, err := parseUUID(parsedToken.GetJti, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)

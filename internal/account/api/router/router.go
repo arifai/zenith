@@ -19,6 +19,8 @@ func AccountRouter(group *gin.RouterGroup, db *gorm.DB, config *config.Config, r
 		authAccountGroup.POST("/authorization", accountHandler.AuthHandler)
 		authAccountGroup.POST("/unauthorization", accountHandler.UnauthHandler).
 			Use(middleware.Middleware(db, redisClient))
+		authAccountGroup.POST("/refresh_token", accountHandler.RefreshTokenHandler).
+			Use(middleware.Middleware(db, redisClient))
 	}
 
 	accountGroup := group.Group("/account")
