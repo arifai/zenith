@@ -26,7 +26,7 @@ func ConnectDatabase(cfg config.Config) *gorm.DB {
 // the DSN from the actual connection logic.
 func connectDatabaseWithDSN(dsn string, nowFunc func() time.Time) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:  logger.Default.LogMode(logger.Silent),
+		Logger:  logger.Default.LogMode(logger.Info),
 		NowFunc: nowFunc,
 	})
 	if err != nil {
