@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"github.com/arifai/zenith/internal/types/response"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -22,12 +23,6 @@ type (
 		Result  any            `json:"result"`
 	}
 
-	// AuthResponse represents the structure of the authentication response containing AccessToken and RefreshToken.
-	AuthResponse struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-	}
-
 	// EntriesModel represents a paginated collection of entries of a generic type T.
 	EntriesModel[T interface{}] struct {
 		Entries    []T `json:"entries"`
@@ -36,6 +31,11 @@ type (
 		TotalPages int `json:"total_pages"`
 	}
 )
+
+// NewResponse initializes a new instance of the Response struct.
+func NewResponse() *Response {
+	return &Response{}
+}
 
 // New sets the response format and sends a JSON response with HTTP code, message, errormessage, and result data.
 func (r Response) New(c *gin.Context, code int, message string, errors []utils.IError, result interface{}) {
@@ -78,7 +78,7 @@ func (r Response) Created(c *gin.Context, message string, result interface{}) {
 }
 
 // Authorized sends an HTTP 202 Accepted response with the given authentication result.
-func (r Response) Authorized(c *gin.Context, result *AuthResponse) {
+func (r Response) Authorized(c *gin.Context, result *response.AccountAuthResponse) {
 	c.JSON(http.StatusAccepted, ResponseModel{
 		Code:    http.StatusAccepted,
 		Message: "Authorized",

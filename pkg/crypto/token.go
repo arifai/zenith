@@ -19,6 +19,11 @@ type TokenPayload struct {
 	TokenType string
 }
 
+const (
+	AccessToken  = "access_token"
+	RefreshToken = "refresh_token"
+)
+
 // GenerateToken creates a signed token using the given secret key.
 func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) string {
 	token := paseto.NewToken()
