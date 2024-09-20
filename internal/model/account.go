@@ -16,7 +16,7 @@ type Account struct {
 	FcmToken          string             `json:"fcm_token" gorm:"column:fcm_token;type:varchar"`
 	CreatedAt         time.Time          `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
 	UpdatedAt         *time.Time         `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
-	AccountPassHashed *AccountPassHashed `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	AccountPassHashed *AccountPassHashed `json:"-" gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // AccountPassHashed represents a hashed password associated with an account.

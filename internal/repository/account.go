@@ -50,8 +50,7 @@ func (a *accountRepository) FindByEmail(email string) (*model.Account, error) {
 
 func (a *accountRepository) FindByID(id *uuid.UUID) (*model.Account, error) {
 	account := new(model.Account)
-	if err := a.db.Preload("AccountPassHashed").
-		First(account, id).Error; err != nil {
+	if err := a.db.First(account, id).Error; err != nil {
 		return nil, err
 	}
 
