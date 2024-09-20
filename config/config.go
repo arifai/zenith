@@ -69,7 +69,6 @@ func NewEnv(defaultConfig Config, smtp SMTPConfig, redis RedisConfig) *EnvImpl {
 	return &EnvImpl{defaultConfig: defaultConfig, smtpConfig: smtp, redisConfig: redis}
 }
 
-// LoadDefault load default configuration from `env` file such as DB_HOST, DB_USER, DB_PASSWORD, etc.
 func (e *EnvImpl) LoadDefault(filenames ...string) Config {
 	cfg := e.defaultConfig
 	cfg = loadEnvFile[Config](filenames...)
@@ -77,7 +76,6 @@ func (e *EnvImpl) LoadDefault(filenames ...string) Config {
 	return cfg
 }
 
-// LoadSMTP load SMTP configuration from `env` file.
 func (e *EnvImpl) LoadSMTP(filenames ...string) SMTPConfig {
 	cfg := e.smtpConfig
 	cfg = loadEnvFile[SMTPConfig](filenames...)
@@ -85,7 +83,6 @@ func (e *EnvImpl) LoadSMTP(filenames ...string) SMTPConfig {
 	return cfg
 }
 
-// LoadRedis load Redis configuration from `env` file.
 func (e *EnvImpl) LoadRedis(filenames ...string) RedisConfig {
 	cfg := e.redisConfig
 	cfg = loadEnvFile[RedisConfig](filenames...)
