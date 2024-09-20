@@ -33,9 +33,9 @@ const (
 	ErrInvalidTokenTypeText             = "invalid token type"
 	ErrWrongOldPasswordText             = "wrong old password"
 	ErrInvalidSaltLengthText            = "invalid salt length"
-	ErrTypeAssertionFailedText          = "type assertion to *model.Account failed, got %T"
 	ErrInvalidAccessTokenInBodyText     = "invalid access token in body, maybe your token has expired"
 	ErrInvalidRefreshTokenInBodyText    = "invalid refresh token in body, maybe your token has expired"
+	ErrAccountNotFoundText              = "account not found"
 )
 
 var (
@@ -56,4 +56,5 @@ var (
 	ErrCannotFindAuthorizedAccount  = errors.New(ErrCannotFindAuthorizedAccountText)
 	ErrInvalidAccessTokenInBody     = errors.New(ErrInvalidAccessTokenInBodyText)
 	ErrInvalidRefreshTokenInBody    = errors.New(ErrInvalidRefreshTokenInBodyText)
+	ErrAccountNotFound              = errors.New(ErrAccountNotFoundText)
 )

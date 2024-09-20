@@ -1,6 +1,7 @@
-package model
+package migration
 
 import (
+	"github.com/arifai/zenith/internal/model"
 	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,15 +13,15 @@ import (
 // within a transaction to ensure atomicity.
 func AccountMigration(db *gorm.DB) {
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Migrator().DropTable(&Account{}, &AccountPassHashed{}); err != nil {
+		if err := tx.Migrator().DropTable(&model.Account{}, &model.AccountPassHashed{}); err != nil {
 			return err
 		}
 
-		if err := tx.Debug().AutoMigrate(&Account{}, &AccountPassHashed{}); err != nil {
+		if err := tx.AutoMigrate(&model.Account{}, &model.AccountPassHashed{}); err != nil {
 			return err
 		}
 
-		account := &Account{
+		account := &model.Account{
 			ID:       uuid.New(),
 			FullName: "John Doe",
 			Email:    "john.doe@mail.com",
@@ -34,7 +35,7 @@ func AccountMigration(db *gorm.DB) {
 			return err
 		}
 
-		userPassHashed := &AccountPassHashed{AccountId: account.ID, PassHashed: generatedHash}
+		userPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: generatedHash}
 
 		if tx.Model(&account).Where("email = ?", account.Email).Updates(&account).RowsAffected == 0 {
 			if err := tx.Create(&account).Error; err != nil {
