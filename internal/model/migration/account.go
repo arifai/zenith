@@ -29,7 +29,7 @@ func AccountMigration(db *gorm.DB) {
 			Active:   true,
 		}
 
-		p := crypto.Argon2IdHash{Time: 1, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 16}
+		p := crypto.DefaultArgon2IDHash
 		generatedHash, err := p.GenerateHash([]byte("12345678"), nil)
 		if err != nil {
 			return err
