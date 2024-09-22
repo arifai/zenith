@@ -7,10 +7,12 @@ import (
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/internal/handler"
 	"github.com/arifai/zenith/internal/middleware"
+	"github.com/arifai/zenith/internal/model/migration"
 	"github.com/arifai/zenith/internal/repository"
 	"github.com/arifai/zenith/internal/service"
 	"github.com/arifai/zenith/pkg/api"
 	"github.com/arifai/zenith/pkg/common"
+	"github.com/arifai/zenith/pkg/firebase"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
@@ -21,6 +23,26 @@ import (
 func InitializeResponse() *common.Response {
 	wire.Build(common.NewResponse)
 	return &common.Response{}
+}
+
+func InitializeConfig(filenames ...string) *config.Config {
+	wire.Build(config.NewConfig)
+	return nil
+}
+
+func InitializeMigration(db *gorm.DB) *migration.Migration {
+	wire.Build(migration.New)
+	return &migration.Migration{}
+}
+
+func InitializeFirebase(firebaseConfigFile string) (*firebase.Messaging, error) {
+	wire.Build(firebase.New)
+	return &firebase.Messaging{}, nil
+}
+
+func InitializeMessagingService(firebaseConfigFile string) (*firebase.MessagingService, error) {
+	wire.Build(InitializeFirebase, firebase.NewMessagingService)
+	return &firebase.MessagingService{}, nil
 }
 
 // InitializeRepository sets up a new instance of repository.Repository using the provided database and redis clients.

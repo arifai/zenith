@@ -11,48 +11,70 @@ import (
 // AccountMigration performs the migration of the Account and AccountPassHashed tables. It drops the existing tables, creates
 // new ones, and inserts a default account with a hashed password if it does not already exist. All operations are handled
 // within a transaction to ensure atomicity.
-func AccountMigration(db *gorm.DB) {
-	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Migrator().DropTable(&model.Account{}, &model.AccountPassHashed{}); err != nil {
+const defaultPassword = "12345678"
+
+// AccountMigration performs the migration of the Account and AccountPassHashed tables.
+func (m *Migration) AccountMigration() {
+	err := m.Transaction(func(tx *gorm.DB) error {
+		if err := migrateAccount(tx); err != nil {
 			return err
 		}
 
-		if err := tx.AutoMigrate(&model.Account{}, &model.AccountPassHashed{}); err != nil {
-			return err
-		}
-
-		account := &model.Account{
-			ID:       uuid.New(),
-			FullName: "John Doe",
-			Email:    "john.doe@mail.com",
-			Avatar:   "https://api.dicebear.com/9.x/notionists/png?scale=130&size=260&backgroundColor=b6e3f4",
-			Active:   true,
-		}
-
-		p := crypto.DefaultArgon2IDHash
-		generatedHash, err := p.GenerateHash([]byte("12345678"), nil)
+		account := createDefaultAccount()
+		hashedPassword, err := hashDefaultPassword()
 		if err != nil {
 			return err
 		}
+		accountPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: hashedPassword}
 
-		userPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: generatedHash}
-
-		if tx.Model(&account).Where("email = ?", account.Email).Updates(&account).RowsAffected == 0 {
-			if err := tx.Create(&account).Error; err != nil {
-				return err
-			}
+		if err := updateOrInsertRecord(tx, &account, "email = ?", account.Email); err != nil {
+			return err
 		}
-
-		if tx.Model(&userPassHashed).Where("account_id = ?", account.ID).Updates(&userPassHashed).RowsAffected == 0 {
-			if err := tx.Create(&userPassHashed).Error; err != nil {
-				return err
-			}
+		if err := updateOrInsertRecord(tx, accountPassHashed, "account_id = ?", account.ID); err != nil {
+			return err
 		}
-
 		return nil
 	})
-
 	if err != nil {
 		log.Fatalf("Error during account migration: %v", err)
 	}
+}
+
+// migrateAccount performs the migration of Account and AccountPassHashed tables within a transaction, ensuring atomicity.
+func migrateAccount(tx *gorm.DB) error {
+	if err := tx.Migrator().DropTable(&model.Account{}, &model.AccountPassHashed{}); err != nil {
+		return err
+	}
+	if err := tx.AutoMigrate(&model.Account{}, &model.AccountPassHashed{}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// createDefaultAccount creates a new account with default values for ID, FullName, Email, Avatar, and sets Active to true.
+func createDefaultAccount() *model.Account {
+	return &model.Account{
+		ID:       uuid.New(),
+		FullName: "John Doe",
+		Email:    "john.doe@mail.com",
+		Avatar:   "https://api.dicebear.com/9.x/notionists/png?scale=130&size=260&backgroundColor=b6e3f4",
+		Active:   true,
+	}
+}
+
+// hashDefaultPassword generates a hashed representation of a predefined default password using the Argon2ID algorithm.
+// Returns the encoded hash or an error if the hashing process fails.
+func hashDefaultPassword() (string, error) {
+	p := crypto.DefaultArgon2IDHash
+	return p.GenerateHash([]byte(defaultPassword), nil)
+}
+
+// updateOrInsertRecord updates a record based on the provided query, or inserts it if no record matches the query.
+func updateOrInsertRecord(tx *gorm.DB, record interface{}, query string, args ...interface{}) error {
+	if tx.Model(record).Where(query, args...).Updates(record).RowsAffected == 0 {
+		if err := tx.Create(record).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }

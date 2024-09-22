@@ -19,6 +19,7 @@ type (
 	// It contains the necessary fields for Email and Password validation.
 	AccountAuthRequest struct {
 		Email    string `json:"email" validate:"required,email"`
+		FcmToken string `json:"fcm_token" validate:"required"`
 		Password string `json:"password" validate:"required,min=8,max=100"`
 	}
 

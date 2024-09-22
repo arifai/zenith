@@ -2,19 +2,18 @@ package database
 
 import (
 	"fmt"
-	"log"
-	"time"
-
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"log"
+	"time"
 )
 
 // ConnectDatabase establishes a connection to the database using the provided configuration settings.
 // It returns a *gorm.DB instance for interacting with the database.
-func ConnectDatabase(cfg config.Config) *gorm.DB {
+func ConnectDatabase(cfg *config.Config) *gorm.DB {
 	log.Println("Connecting to database...")
 
 	dsn := buildDSN(cfg)
@@ -46,7 +45,7 @@ func connectDatabaseWithDSN(dsn string, nowFunc func() time.Time) *gorm.DB {
 }
 
 // buildDSN constructs the database source name from the provided configuration.
-func buildDSN(cfg config.Config) string {
+func buildDSN(cfg *config.Config) string {
 	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		cfg.DatabaseHost, cfg.DatabaseUser, cfg.DatabasePassword, cfg.DatabaseName,
 		cfg.DatabasePort, cfg.SslMode)

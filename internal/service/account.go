@@ -104,6 +104,10 @@ func (a *accountService) Authorization(body *request.AccountAuthRequest) (*respo
 		return nil, errormessage.ErrEmailAddressNotFound
 	}
 
+	if err = a.accountRepo.SetFCMToken(account.Email, body.FcmToken); err != nil {
+		return nil, err
+	}
+
 	if err := validateAccount(account, body.Password); err != nil {
 		return nil, err
 	}
@@ -128,6 +132,10 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 	verifyAccessToken, err := crypto.VerifyToken(body.AccessToken, config.PublicKey)
 	if err != nil {
 		return errormessage.ErrInvalidAccessTokenInBody
+	}
+
+	if err = a.accountRepo.RemoveFCMToken(verifyAccessToken.AccountId); err != nil {
+		return err
 	}
 
 	if err = a.blacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {

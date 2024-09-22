@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/arifai/zenith/cmd/wire"
 	"github.com/arifai/zenith/config"
-	"github.com/arifai/zenith/internal/model/migration"
 	"github.com/arifai/zenith/pkg/database"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/redis/go-redis/v9"
@@ -18,11 +17,11 @@ const (
 	trustedProxyAddr = "127.0.0.1"
 )
 
-// RunServer initializes the environment and starts the server, logging errors if the server initialization fails.
-func RunServer() {
+// Run initializes the environment and starts the server, logging errors if the server initialization fails.
+func Run() {
 	fmt.Println(banner())
-	envLoader := config.NewEnv(config.Config{}, config.SMTPConfig{}, config.RedisConfig{})
-	if err := initializeAndRunServer(envLoader); err != nil {
+	initializeConfig := wire.InitializeConfig()
+	if err := initializeAndRunServer(initializeConfig); err != nil {
 		log.Fatalf("Error initializing server: %v", err)
 	}
 }
@@ -38,45 +37,43 @@ func banner() string {
 }
 
 // initializeAndRunServer initializes the environment, connects to the database and Redis, and sets up the server router.
-func initializeAndRunServer(envLoader *config.EnvImpl) error {
-	defConfig := envLoader.LoadDefault()
-	db, err := connectDatabase(defConfig)
+func initializeAndRunServer(config *config.Config) error {
+	db, err := connectDatabase(config)
 	if err != nil {
 		return err
 	}
-	rdb, err := connectRedis(envLoader)
+	rdb, err := connectRedis(config)
 	if err != nil {
 		return err
 	}
 
-	if err := setupRouter(db, rdb, defConfig); err != nil {
+	if err := setupRouter(db, rdb, config); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func connectDatabase(cfg config.Config) (*gorm.DB, error) {
-	db := database.ConnectDatabase(cfg)
+func connectDatabase(config *config.Config) (*gorm.DB, error) {
+	db := database.ConnectDatabase(config)
 	if db == nil {
 		return nil, fmt.Errorf("failed to connect to the database")
 	}
 	return db, nil
 }
 
-func connectRedis(envLoader *config.EnvImpl) (*redis.Client, error) {
-	rdb := database.ConnectRedis(envLoader.LoadRedis())
+func connectRedis(config *config.Config) (*redis.Client, error) {
+	rdb := database.ConnectRedis(config)
 	if rdb == nil {
 		return nil, fmt.Errorf("failed to connect to Redis")
 	}
 	return rdb, nil
 }
 
-func setupRouter(db *gorm.DB, rdb *redis.Client, defConfig config.Config) error {
-	migration.AccountMigration(db)
+func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 	utils.SetupTranslation()
-
-	rtr := wire.InitializeRouter(db, rdb, &defConfig)
+	migrate(db)
+	rtr := wire.InitializeRouter(db, rdb, config)
 
 	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
 		return fmt.Errorf("failed to set trusted proxies: %v", err)
@@ -86,4 +83,10 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, defConfig config.Config) error 
 		return err
 	}
 	return nil
+}
+
+func migrate(db *gorm.DB) {
+	migrator := wire.InitializeMigration(db)
+	migrator.AccountMigration()
+	migrator.NotificationMigration()
 }

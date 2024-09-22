@@ -32,7 +32,7 @@ type Mailer interface {
 
 // MailerImpl provides functionality for sending emails using SMTP. It is initialized with SMTP server configuration details.
 type MailerImpl struct {
-	config  config.SMTPConfig
+	config  config.Config
 	queue   chan emailRequest
 	workers int
 	wg      sync.WaitGroup
@@ -48,7 +48,7 @@ type emailRequest struct {
 }
 
 // NewMailer creates a new MailerImpl instance with the provided SMTPConfig, queue size, and number of worker routines.
-func NewMailer(config config.SMTPConfig, queueSize int, workers int) *MailerImpl {
+func NewMailer(config config.Config, queueSize int, workers int) *MailerImpl {
 	mailer := &MailerImpl{
 		config:  config,
 		queue:   make(chan emailRequest, queueSize),
@@ -63,12 +63,12 @@ func NewMailer(config config.SMTPConfig, queueSize int, workers int) *MailerImpl
 }
 
 func (m *MailerImpl) SendMail(to []string, subject string, body string) error {
-	auth := smtp.PlainAuth("", m.config.Username, m.config.Password, m.config.Host)
-	msg := "From: " + m.config.Username + "\n" +
+	auth := smtp.PlainAuth("", m.config.SMTPUsername, m.config.SMTPPassword, m.config.SMTPHost)
+	msg := "From: " + m.config.SMTPUsername + "\n" +
 		"To: " + fmt.Sprintf("%s", to) + "\n" +
 		"Subject: " + subject + "\n\n" +
 		body
-	return smtp.SendMail(fmt.Sprintf("%s:%d", m.config.Host, m.config.Port), auth, m.config.Username, to, []byte(msg))
+	return smtp.SendMail(fmt.Sprintf("%s:%d", m.config.SMTPHost, m.config.SMTPPort), auth, m.config.SMTPUsername, to, []byte(msg))
 }
 
 func (m *MailerImpl) SendMailWithTemplate(to []string, subject string, templateFileName string, data interface{}) error {
