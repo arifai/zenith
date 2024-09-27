@@ -22,7 +22,7 @@ type Account struct {
 // AccountPassHashed represents a hashed password associated with an account.
 type AccountPassHashed struct {
 	ID         uuid.UUID  `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-	AccountId  uuid.UUID  `json:"account_id" gorm:"not null;column:account_id;type:uuid"`
+	AccountId  uuid.UUID  `json:"account_id" gorm:"not null;column:account_id;type:uuid;index:idx_account_pass_hashed_account_id,hash"`
 	PassHashed string     `json:"pass_hashed" gorm:"not null;column:pass_hashed;type:varchar"`
 	CreatedAt  time.Time  `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
 	UpdatedAt  *time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
