@@ -15,12 +15,12 @@ const defaultPassword = "12345678"
 
 // AccountMigration performs the migration of the Account and AccountPassHashed tables.
 func (m *Migration) AccountMigration() {
-	err := m.Transaction(func(tx *gorm.DB) error {
+	err := m.db.Transaction(func(tx *gorm.DB) error {
 		if err := migrateAccount(tx); err != nil {
 			return err
 		}
 
-		account := createDefaultAccount()
+		account := createDefaultAccount(m.id)
 		hashedPassword, err := hashDefaultPassword()
 		if err != nil {
 			return err
@@ -52,9 +52,9 @@ func migrateAccount(tx *gorm.DB) error {
 }
 
 // createDefaultAccount creates a new account with default values for ID, FullName, Email, Avatar, and sets Active to true.
-func createDefaultAccount() *model.Account {
+func createDefaultAccount(id uuid.UUID) *model.Account {
 	return &model.Account{
-		ID:       uuid.New(),
+		ID:       id,
 		FullName: "John Doe",
 		Email:    "john.doe@mail.com",
 		Avatar:   "https://api.dicebear.com/9.x/notionists/png?scale=130&size=260&backgroundColor=b6e3f4",
