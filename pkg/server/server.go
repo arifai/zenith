@@ -3,9 +3,12 @@ package server
 import (
 	"fmt"
 	"github.com/arifai/zenith/cmd/wire"
+	cfg "github.com/arifai/zenith/cmd/wire/config"
+	"github.com/arifai/zenith/cmd/wire/migration"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/database"
 	"github.com/arifai/zenith/pkg/utils"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"log"
@@ -20,7 +23,7 @@ const (
 // Run initializes the environment and starts the server, logging errors if the server initialization fails.
 func Run() {
 	fmt.Println(banner())
-	initializeConfig := wire.InitializeConfig()
+	initializeConfig := cfg.ProvideConfig()
 	if err := initializeAndRunServer(initializeConfig); err != nil {
 		log.Fatalf("Error initializing server: %v", err)
 	}
@@ -71,8 +74,8 @@ func connectRedis(config *config.Config) (*redis.Client, error) {
 }
 
 func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
-	utils.SetupTranslation()
 	migrate(db)
+	utils.SetupTranslation()
 	rtr := wire.InitializeRouter(db, rdb, config)
 
 	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
@@ -86,7 +89,7 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 }
 
 func migrate(db *gorm.DB) {
-	migrator := wire.InitializeMigration(db)
+	migrator := migration.ProvideMigration(db, uuid.New())
 	migrator.AccountMigration()
 	migrator.NotificationMigration()
 }
