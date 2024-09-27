@@ -39,7 +39,7 @@ func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 		if errors.Is(err, io.EOF) {
 			return nil, []IError{}
 		}
-		return nil, []IError{{Value: CapitalizeFirstLetter(err.Error())}}
+		return nil, []IError{{Value: err.Error()}}
 	}
 
 	if errs := validateStruct(body); errs != nil {
@@ -53,7 +53,7 @@ func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 func ValidateQuery[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
 	if err := ctx.ShouldBindQuery(body); err != nil {
-		return nil, []IError{{Value: CapitalizeFirstLetter(err.Error())}}
+		return nil, []IError{{Value: err.Error()}}
 	}
 
 	if errs := validateStruct(body); errs != nil {
@@ -80,11 +80,11 @@ func validateStruct(body interface{}) []IError {
 			for _, err := range validationErrors {
 				errs = append(errs, IError{
 					Field: err.Field(),
-					Value: CapitalizeFirstLetter(err.Translate(trans)),
+					Value: err.Translate(trans),
 				})
 			}
 		} else {
-			errs = append(errs, IError{Value: CapitalizeFirstLetter(err.Error())})
+			errs = append(errs, IError{Value: err.Error()})
 		}
 	}
 

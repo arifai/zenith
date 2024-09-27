@@ -7,7 +7,9 @@ import (
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"io"
+	"math"
 	"net/http"
 )
 
@@ -25,10 +27,17 @@ type (
 
 	// EntriesModel represents a paginated collection of entries of a generic type T.
 	EntriesModel[T interface{}] struct {
-		Entries    []T `json:"entries"`
-		Count      int `json:"count"`
-		Page       int `json:"page"`
-		TotalPages int `json:"total_pages"`
+		Entries    []T   `json:"entries"`
+		Count      int64 `json:"count"`
+		Page       int   `json:"page"`
+		TotalPages int   `json:"total_pages"`
+	}
+
+	Pagination struct {
+		Offset int    `form:"offset" validate:"omitempty"`
+		Limit  int    `form:"limit" validate:"omitempty"`
+		Search string `form:"search" validate:"omitempty"`
+		Sort   string `form:"sort" validate:"omitempty"`
 	}
 )
 
@@ -48,7 +57,7 @@ func (r Response) New(c *gin.Context, code int, message string, errors []utils.I
 }
 
 // NewEntries creates and returns a pointer to an EntriesModel with the given entries, count, page, and totalPages.
-func NewEntries[T interface{}](entries []T, count, page, totalPages int) *EntriesModel[T] {
+func NewEntries[T interface{}](entries []T, count int64, page, totalPages int) *EntriesModel[T] {
 	return &EntriesModel[T]{
 		Entries:    entries,
 		Count:      count,
@@ -148,4 +157,67 @@ func (r Response) InternalServerError(c *gin.Context, message string) {
 		Errors:  []utils.IError{},
 		Result:  nil,
 	})
+}
+
+func (r Response) NotFound(c *gin.Context, message string) {
+	c.JSON(http.StatusNotFound, ResponseModel{
+		Code:    http.StatusNotFound,
+		Message: utils.CapitalizeFirstLetter(message),
+		Errors:  []utils.IError{},
+		Result:  nil,
+	})
+}
+
+func (p Pagination) GetOffset() int {
+	return (p.getOffset() - 1) * p.GetLimit()
+}
+
+func (p Pagination) GetLimit() int {
+	if p.Limit == 0 {
+		p.Limit = 10
+	}
+
+	return p.Limit
+}
+
+func (p Pagination) getOffset() int {
+	if p.Offset == 0 {
+		p.Offset = 1
+	}
+
+	return p.Offset
+}
+
+func (p Pagination) GetPage(count int64) int {
+	var page int
+	if count == 0 {
+		page = 0
+	} else {
+		page = p.getOffset()
+	}
+
+	return page
+}
+
+func (p Pagination) GetSort() string {
+	if p.Sort == "" {
+		p.Sort = "id desc"
+	}
+
+	return p.Sort
+}
+
+func (p Pagination) GetTotalPages(count int64) int {
+	limit := p.GetLimit()
+	if limit == 0 {
+		return 0
+	}
+
+	return int(math.Ceil(float64(count) / float64(limit)))
+}
+
+func Paginate(paging *Pagination) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Offset(paging.GetOffset()).Limit(paging.GetLimit())
+	}
 }
