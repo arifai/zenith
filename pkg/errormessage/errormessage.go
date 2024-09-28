@@ -13,8 +13,8 @@ const (
 	ErrInvalidEncodedHashText           = "invalid encoded hash"
 	ErrIncompatibleArgon2VersionText    = "incompatible argon2 version"
 	ErrMissingAuthorizationHeaderText   = "authorization header missing"
+	ErrFailedToConnectRedisText         = "failed to connect to Redis"
 	ErrInvalidTokenHashText             = "invalid token hash"
-	ErrCannotFindAuthorizedAccountText  = "cannot find authorized account"
 	ErrParsingRequestDataText           = "failed to parsing request data"
 	ErrFailedToConnectDBText            = "failed to connect to database"
 	ErrFailedGetDBInstanceText          = "failed to get database instance"
@@ -36,6 +36,17 @@ const (
 	ErrInvalidAccessTokenInBodyText     = "invalid access token in body, maybe your token has expired"
 	ErrInvalidRefreshTokenInBodyText    = "invalid refresh token in body, maybe your token has expired"
 	ErrAccountNotFoundText              = "account not found"
+	ErrFailedSendEmailText              = "failed to send email"
+	ErrInitializingServerText           = "error initializing server"
+	ErrFailedSetTrustedProxiesText      = "failed to set trusted proxies"
+	ErrSaltLengthIncorrectText          = "salt length is incorrect"
+	ErrFailedToDecodeBase64Text         = "failed to decode base64"
+	ErrFailedToGenerateRandomBytesText  = "failed to generate random bytes"
+	ErrFailedToLoadEnvFileText          = "failed to load env file"
+	ErrFailedToLoadEnvVariableText      = "failed to load env variable"
+	ErrMigrationText                    = "error during migration"
+	ErrCreatingEnumsText                = "error creating enums"
+	ErrInsertingMigrationDataText       = "error during inserting migration data"
 )
 
 var (
@@ -53,7 +64,6 @@ var (
 	ErrMissingAuthorizationHeader   = errors.New(ErrMissingAuthorizationHeaderText)
 	ErrInvalidTokenType             = errors.New(ErrInvalidTokenTypeText)
 	ErrInvalidAccessToken           = errors.New(ErrInvalidTokenHashText)
-	ErrCannotFindAuthorizedAccount  = errors.New(ErrCannotFindAuthorizedAccountText)
 	ErrInvalidAccessTokenInBody     = errors.New(ErrInvalidAccessTokenInBodyText)
 	ErrInvalidRefreshTokenInBody    = errors.New(ErrInvalidRefreshTokenInBodyText)
 	ErrAccountNotFound              = errors.New(ErrAccountNotFoundText)

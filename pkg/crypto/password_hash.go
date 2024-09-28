@@ -6,8 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/argon2"
-	"log"
 	"strings"
 )
 
@@ -48,7 +49,7 @@ func (a *Argon2IdHash) GenerateHash(password, salt []byte) (string, error) {
 
 func validateSaltLength(salt []byte, expectedSaltLen uint32) error {
 	if len(salt) > 0 && uint32(len(salt)) != expectedSaltLen {
-		log.Printf("salt length is incorrect: expected %d bytes, got %d bytes", expectedSaltLen, len(salt))
+		logg.Logger.Error(errormessage.ErrSaltLengthIncorrectText, zap.Uint32("expected", expectedSaltLen), zap.Int("got", len(salt)))
 		return errormessage.ErrInvalidSaltLength
 	}
 	return nil
@@ -83,6 +84,7 @@ func generateBytes(length uint32) ([]byte, error) {
 	secret := make([]byte, length)
 	_, err := rand.Read(secret)
 	if err != nil {
+		logg.Logger.Error(errormessage.ErrFailedToGenerateRandomBytesText, zap.Error(err))
 		return nil, err
 	}
 	return secret, nil
@@ -93,11 +95,13 @@ func generateBytes(length uint32) ([]byte, error) {
 func decodeHash(encodedHash string) (a *Argon2IdHash, salt, hash []byte, err error) {
 	value := strings.Split(encodedHash, "$")
 	if len(value) != 6 {
+		logg.Logger.Error(errormessage.ErrInvalidEncodedHashText, zap.Int("length", len(value)))
 		return nil, nil, nil, errormessage.ErrInvalidEncodedHash
 	}
 
 	var version int
 	if _, err = fmt.Sscanf(value[2], "v=%d", &version); err != nil {
+		logg.Logger.Error(errormessage.ErrIncompatibleArgon2VersionText, zap.Int("got", version))
 		return nil, nil, nil, errormessage.ErrIncompatibleArgon2Version
 	}
 
@@ -107,11 +111,13 @@ func decodeHash(encodedHash string) (a *Argon2IdHash, salt, hash []byte, err err
 	}
 
 	if salt, err = base64.StdEncoding.DecodeString(value[4]); err != nil {
+		logg.Logger.Error(errormessage.ErrFailedToDecodeBase64Text, zap.String("input", value[4]), zap.Error(err))
 		return nil, nil, nil, err
 	}
 	a.SaltLen = uint32(len(salt))
 
 	if hash, err = base64.StdEncoding.DecodeString(value[5]); err != nil {
+		logg.Logger.Error(errormessage.ErrFailedToDecodeBase64Text, zap.String("input", value[5]), zap.Error(err))
 		return nil, nil, nil, err
 	}
 	a.KeyLen = uint32(len(hash))

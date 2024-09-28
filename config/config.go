@@ -3,8 +3,10 @@ package config
 import (
 	"aidanwoods.dev/go-paseto"
 	"github.com/Netflix/go-env"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/joho/godotenv"
-	"log"
+	"go.uber.org/zap"
 )
 
 type (
@@ -44,12 +46,12 @@ func NewConfig(filenames ...string) *Config {
 // loadEnvFile loads the configuration from the provided `.env` files and environment variables.
 func loadEnvFile(filenames ...string) Config {
 	if err := godotenv.Load(filenames...); err != nil {
-		log.Fatalf("Error loading `.env` file: %v", err)
+		logg.Logger.Fatal(errormessage.ErrFailedToLoadEnvFileText, zap.Error(err))
 	}
 
 	var config Config
 	if _, err := env.UnmarshalFromEnviron(&config); err != nil {
-		log.Fatalf("Failed to load environment variables: %v", err)
+		logg.Logger.Fatal(errormessage.ErrFailedToLoadEnvVariableText, zap.Error(err))
 	}
 
 	return config
