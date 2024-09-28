@@ -23,6 +23,10 @@ type (
 
 		// UpdatePassword updates the hashed password of an account in the database. Returns an error if the update operation fails.
 		UpdatePassword(account *model.Account) error
+
+		SetFCMToken(email, fcmToken string) error
+
+		RemoveFCMToken(id uuid.UUID) error
 	}
 
 	// accountRepository encapsulates a Repository to provide specific methods for handling account data.
@@ -62,8 +66,16 @@ func (a *accountRepository) Update(account *model.Account) error {
 }
 
 func (a *accountRepository) UpdatePassword(account *model.Account) error {
-	return a.db.Model(&model.AccountPassHashed{}).
-		Clauses(clause.Returning{}).
-		Where("account_id = ?", account.ID).
+	return a.db.Where(&model.AccountPassHashed{AccountId: account.ID}).
 		Update("pass_hashed", account.AccountPassHashed.PassHashed).Error
+}
+
+func (a *accountRepository) SetFCMToken(email, fcmToken string) error {
+	return a.db.Model(&model.Account{}).Where(&model.Account{Email: email}).
+		Update("fcm_token", fcmToken).Error
+}
+
+func (a *accountRepository) RemoveFCMToken(id uuid.UUID) error {
+	return a.db.Model(&model.Account{}).Where(&model.Account{ID: id}).
+		Update("fcm_token", nil).Error
 }

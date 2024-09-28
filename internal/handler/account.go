@@ -77,9 +77,8 @@ func (a *AccountHandler) Unauthorization(ctx *gin.Context) {
 // GetCurrent handles the retrieval of the current account details based on the account ID from the context.
 func (a *AccountHandler) GetCurrent(ctx *gin.Context) {
 	accountId := GetAccountIDFromContext(ctx)
-
 	if accountId == nil {
-		a.response.Error(ctx, "Account ID not found in context")
+		a.response.NotFound(ctx, "Account ID not found in context")
 		return
 	}
 

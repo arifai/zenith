@@ -9,14 +9,14 @@ import (
 )
 
 // ConnectRedis establishes a connection to a Redis server using the provided configuration and returns the client instance.
-func ConnectRedis(config config.RedisConfig) *redis.Client {
-	address := fmt.Sprintf("%s:%d", config.Host, config.Port)
+func ConnectRedis(config *config.Config) *redis.Client {
+	address := fmt.Sprintf("%s:%d", config.RedisHost, config.RedisPort)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     address,
-		DB:       config.Database,
-		Username: config.Username,
-		Password: config.Password,
+		DB:       config.RedisDatabase,
+		Username: config.RedisUsername,
+		Password: config.RedisPassword,
 	})
 
 	checkRedisConnection(rdb)

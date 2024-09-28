@@ -7,16 +7,16 @@ import (
 )
 
 // AccountRouter sets up routes for account operations, including registration, authorization, and current account info fetching.
-func AccountRouter(group *gin.RouterGroup, accountHandler *handler.AccountHandler, strictAuthMiddleware *middleware.StrictAuthMiddleware) {
+func AccountRouter(group *gin.RouterGroup, accountHandler *handler.AccountHandler, middleware *middleware.StrictAuthMiddleware) {
 	accountAuthGroup := group.Group("/auth/account")
-	accountGroup := group.Group("/account", strictAuthMiddleware.StrictAuth())
+	accountGroup := group.Group("/account", middleware.StrictAuth())
 	meGroup := accountGroup.Group("/me")
 	updateGroup := meGroup.Group("/update")
 
 	setupAccountAuthRoutes := func(g *gin.RouterGroup) {
 		accountAuthGroup.POST("/registration", accountHandler.Register)
 		accountAuthGroup.POST("/authorization", accountHandler.Authorization)
-		accountAuthGroup.POST("/unauthorization", strictAuthMiddleware.StrictAuth(), accountHandler.Unauthorization)
+		accountAuthGroup.POST("/unauthorization", middleware.StrictAuth(), accountHandler.Unauthorization)
 	}
 
 	setupAccountRoutes := func(g *gin.RouterGroup) {

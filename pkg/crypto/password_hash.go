@@ -21,8 +21,8 @@ type Argon2IdHash struct {
 }
 
 // DefaultArgon2IDHash is an instance of crypto.Argon2IdHash used to configure Argon2ID password hashing with specified time,
-// memory, threads, key length, and salt length.
-var DefaultArgon2IDHash = &Argon2IdHash{Time: 3, Memory: 64 * 1024, Threads: 4, KeyLen: 32, SaltLen: 32}
+// memory, threads, key length, and salt length. Reference: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
+var DefaultArgon2IDHash = &Argon2IdHash{Time: 2, Memory: 19 * 1024, Threads: 1, KeyLen: 32, SaltLen: 32}
 
 // Argon2Version is the version of the argon2 algorithm
 const Argon2Version = argon2.Version

@@ -8,8 +8,9 @@ import (
 )
 
 // SetupRouter initializes the main router and sets up all the routes and groups under "/api/v1".
-func SetupRouter(engine *gin.Engine, accountHandler *handler.AccountHandler, strictAuthMiddleware *middleware.StrictAuthMiddleware) *gin.Engine {
+func SetupRouter(engine *gin.Engine, accountHandler *handler.AccountHandler, notificationHandler *handler.NotificationHandler, middleware *middleware.StrictAuthMiddleware) *gin.Engine {
 	apiV1 := engine.Group("/api/v1")
-	router.AccountRouter(apiV1, accountHandler, strictAuthMiddleware)
+	router.AccountRouter(apiV1, accountHandler, middleware)
+	router.NotificationRouter(apiV1, notificationHandler, middleware)
 	return engine
 }
