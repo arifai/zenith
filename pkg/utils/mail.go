@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
+	"go.uber.org/zap"
 	"html/template"
 	"net/smtp"
 	"sync"
@@ -104,9 +107,7 @@ func (m *MailerImpl) Worker() {
 			err = m.SendMail(email.to, email.subject, email.body)
 		}
 		if err != nil {
-			fmt.Println("Failed to send email:", err)
-		} else {
-			fmt.Println("Email sent successfully")
+			logg.Logger.Error(errormessage.ErrFailedSendEmailText, zap.Error(err))
 		}
 	}
 }

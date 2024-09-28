@@ -7,11 +7,13 @@ import (
 	"github.com/arifai/zenith/cmd/wire/migration"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/database"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"log"
 	"os"
 )
 
@@ -23,9 +25,10 @@ const (
 // Run initializes the environment and starts the server, logging errors if the server initialization fails.
 func Run() {
 	fmt.Println(banner())
+	logg.Logger.Info("Starting server")
 	initializeConfig := cfg.ProvideConfig()
 	if err := initializeAndRunServer(initializeConfig); err != nil {
-		log.Fatalf("Error initializing server: %v", err)
+		logg.Logger.Error(errormessage.ErrInitializingServerText, zap.Error(err))
 	}
 }
 
@@ -60,7 +63,7 @@ func initializeAndRunServer(config *config.Config) error {
 func connectDatabase(config *config.Config) (*gorm.DB, error) {
 	db := database.ConnectDatabase(config)
 	if db == nil {
-		return nil, fmt.Errorf("failed to connect to the database")
+		return nil, fmt.Errorf(errormessage.ErrFailedToConnectDBText)
 	}
 	return db, nil
 }
@@ -68,7 +71,7 @@ func connectDatabase(config *config.Config) (*gorm.DB, error) {
 func connectRedis(config *config.Config) (*redis.Client, error) {
 	rdb := database.ConnectRedis(config)
 	if rdb == nil {
-		return nil, fmt.Errorf("failed to connect to Redis")
+		return nil, fmt.Errorf(errormessage.ErrFailedToConnectRedisText)
 	}
 	return rdb, nil
 }
@@ -79,7 +82,7 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 	rtr := wire.InitializeRouter(db, rdb, config)
 
 	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
-		return fmt.Errorf("failed to set trusted proxies: %v", err)
+		return fmt.Errorf(errormessage.ErrFailedSetTrustedProxiesText+"%v", err)
 	}
 
 	if err := rtr.Run(serverAddress); err != nil {
