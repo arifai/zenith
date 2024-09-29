@@ -11,7 +11,7 @@ type (
 	NotificationService interface {
 		GetList(id *uuid.UUID, paging *common.Pagination) (*common.EntriesModel[*model.Notification], error)
 
-		MarkAsRead(id uuid.UUID) error
+		MarkAsRead(id uuid.UUID) (founded bool, err error)
 	}
 
 	notificationService struct {
@@ -39,6 +39,6 @@ func (s *notificationService) GetList(id *uuid.UUID, paging *common.Pagination) 
 	return common.NewEntries(entries, count, page, totalPages), nil
 }
 
-func (s *notificationService) MarkAsRead(id uuid.UUID) error {
+func (s *notificationService) MarkAsRead(id uuid.UUID) (founded bool, err error) {
 	return s.notificationRepo.MarkAsRead(id)
 }

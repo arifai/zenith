@@ -12,7 +12,7 @@ type (
 	NotificationRepository interface {
 		GetList(id *uuid.UUID, paging *common.Pagination) (notifications []*model.Notification, count int64, err error)
 
-		MarkAsRead(id uuid.UUID) error
+		MarkAsRead(id uuid.UUID) (founded bool, err error)
 	}
 
 	notificationRepository struct{ *Repository }
@@ -30,20 +30,31 @@ func (r *notificationRepository) GetList(id *uuid.UUID, paging *common.Paginatio
 	}
 
 	if err = r.db.Model(&model.Notification{}).
-		Scopes(common.Paginate(paging)).
+		Scopes(common.Paginate(paging, "title")).
 		Where("account_id = ?", id).
-		Order(paging.GetSort()).
 		Find(&notifications).Error; err != nil {
 		return nil, 0, err
 	}
 
+	count = int64(len(notifications))
+
 	return notifications, count, nil
 }
 
-func (r *notificationRepository) MarkAsRead(id uuid.UUID) error {
+func (r *notificationRepository) MarkAsRead(id uuid.UUID) (founded bool, err error) {
 	now := time.Now()
-	return r.db.Model(&model.Notification{}).
+	result := r.db.Model(&model.Notification{}).
 		Clauses(clause.Returning{}).
 		Where(&model.Notification{ID: id}).
-		Updates(map[string]interface{}{"read": true, "read_at": &now}).Error
+		Updates(map[string]interface{}{"read": true, "read_at": &now})
+
+	if result.Error != nil {
+		return false, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return false, err
+	}
+
+	return true, nil
 }

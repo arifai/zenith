@@ -49,8 +49,14 @@ func (h *NotificationHandler) MarkAsRead(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.notificationService.MarkAsRead(body.ID); err != nil {
+	founded, err := h.notificationService.MarkAsRead(body.ID)
+	if err != nil {
 		h.response.Error(ctx, err)
+		return
+	}
+
+	if !founded {
+		h.response.NotFound(ctx, "notification not found")
 		return
 	}
 

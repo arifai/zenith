@@ -16,7 +16,7 @@ import (
 // IError represents a structured error with field and description.
 type IError struct {
 	Field string `json:"field"`
-	Value string `json:"description"`
+	Value string `json:"reason"`
 }
 
 var (
@@ -35,7 +35,7 @@ func SetupTranslation() {
 // ValidateBody validates the JSON body of an HTTP request and binds it to a struct.
 func ValidateBody[T any](ctx *gin.Context) (*T, interface{}) {
 	body := new(T)
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBind(body); err != nil {
 		if errors.Is(err, io.EOF) {
 			return nil, []IError{}
 		}
