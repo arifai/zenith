@@ -8,9 +8,11 @@ import (
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"io"
 	"math"
 	"net/http"
+	"strings"
 )
 
 type (
@@ -38,6 +40,7 @@ type (
 		Limit  int    `form:"limit" validate:"omitempty"`
 		Search string `form:"search" validate:"omitempty"`
 		Sort   string `form:"sort" validate:"omitempty"`
+		Desc   bool   `form:"desc" validate:"omitempty"`
 	}
 )
 
@@ -106,16 +109,6 @@ func (r Response) Unauthorized(c *gin.Context, errors []utils.IError, message st
 	})
 }
 
-// NotFound is a handler function that responds with a '404 Not Found' status and a formatted message using JSON.
-func NotFound(c *gin.Context, message string) {
-	c.JSON(http.StatusNotFound, ResponseModel{
-		Code:    http.StatusNotFound,
-		Message: utils.CapitalizeFirstLetter(message),
-		Errors:  []utils.IError{},
-		Result:  nil,
-	})
-}
-
 // Error handles different types of errormessage (string, []utils.IError, error) and responds with appropriate HTTP status.
 func (r Response) Error(c *gin.Context, errParam interface{}) {
 	switch err := errParam.(type) {
@@ -159,6 +152,7 @@ func (r Response) InternalServerError(c *gin.Context, message string) {
 	})
 }
 
+// NotFound is a handler function that responds with a '404 Not Found' status and a formatted message using JSON.
 func (r Response) NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, ResponseModel{
 		Code:    http.StatusNotFound,
@@ -169,7 +163,11 @@ func (r Response) NotFound(c *gin.Context, message string) {
 }
 
 func (p Pagination) GetOffset() int {
-	return (p.getOffset() - 1) * p.GetLimit()
+	if p.Offset == 0 {
+		p.Offset = 1
+	}
+
+	return (p.Offset - 1) * p.GetLimit()
 }
 
 func (p Pagination) GetLimit() int {
@@ -180,31 +178,23 @@ func (p Pagination) GetLimit() int {
 	return p.Limit
 }
 
-func (p Pagination) getOffset() int {
-	if p.Offset == 0 {
-		p.Offset = 1
-	}
-
-	return p.Offset
-}
-
 func (p Pagination) GetPage(count int64) int {
-	var page int
 	if count == 0 {
-		page = 0
-	} else {
-		page = p.getOffset()
+		return 0
 	}
 
-	return page
+	limit := p.GetLimit()
+	offset := p.GetOffset()
+
+	return (offset / limit) + 1
 }
 
 func (p Pagination) GetSort() string {
 	if p.Sort == "" {
-		p.Sort = "id desc"
+		p.Sort = "created_at"
 	}
 
-	return p.Sort
+	return validateSort(p.Sort)
 }
 
 func (p Pagination) GetTotalPages(count int64) int {
@@ -216,8 +206,76 @@ func (p Pagination) GetTotalPages(count int64) int {
 	return int(math.Ceil(float64(count) / float64(limit)))
 }
 
-func Paginate(paging *Pagination) func(db *gorm.DB) *gorm.DB {
+// Paginate applies pagination, sorting, and search functionality to a GORM database query.
+// It uses values from the Pagination struct, including limit, offset, search, sort column, and a boolean (Desc) for sorting direction.
+// The `column` parameter specifies the database column to be used for search functionality.
+//
+// Features:
+// - Pagination: Applies limit and offset to control the number of records returned.
+// - Sorting: Sorts results by the specified column and applies ascending or descending order based on the Desc flag.
+// - Search: Filters results using the search term applied to the specified column.
+//
+// To mitigate SQL injection risks, only alphanumeric column names are allowed for sorting and searching.
+//
+// Important: This function should be used within a GORM Scope to apply pagination, sorting, and search functionality correctly.
+func Paginate(paging *Pagination, column string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Offset(paging.GetOffset()).Limit(paging.GetLimit())
+		if paging.Search != "" {
+			searchTerm := "%" + strings.ToLower(paging.Search) + "%"
+			lowerColumn := strings.ToLower(column)
+
+			if isAlphaNumeric(lowerColumn) {
+				db = db.Where(lowerColumn+" ILIKE ? ", searchTerm)
+			}
+		}
+
+		sort := paging.GetSort()
+
+		return db.Offset(paging.GetOffset()).Limit(paging.GetLimit()).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: sort}, Desc: paging.Desc})
 	}
+}
+
+func isAlphaNumeric(s string) bool {
+	for _, char := range s {
+		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
+// validateSort sanitizes and validates the provided sort parameter to prevent SQL injection vulnerabilities (CWE-89).
+//
+// This function ensures that the input sort string only contains valid field names ("id" or "created_at")
+// and valid sort directions ("asc" or "desc"). If the input is invalid or contains unexpected values,
+// it defaults to "created_at asc" to maintain safety.
+//
+// Security:
+//   - This function mitigates potential SQL injection attacks (CWE-89) by strictly validating the input
+//     against allowed fields and directions, ensuring only safe and expected values are used in SQL queries.
+//
+// Reference: https://cwe.mitre.org/data/definitions/89.html
+func validateSort(sort string) string {
+	allowedFields := map[string]bool{
+		"id":         true,
+		"created_at": true,
+	}
+
+	allowedDirections := map[string]bool{
+		"asc":  true,
+		"desc": true,
+	}
+
+	parts := strings.Fields(strings.TrimSpace(sort))
+	if len(parts) != 2 {
+		return "created_at"
+	}
+
+	field, direction := parts[0], parts[1]
+	if !allowedFields[field] || !allowedDirections[direction] {
+		return "created_at"
+	}
+
+	return field + " " + direction
 }
