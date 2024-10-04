@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/redis/go-redis/v9"
-	"log"
+	"go.uber.org/zap"
 )
 
 // ConnectRedis establishes a connection to a Redis server using the provided configuration and returns the client instance.
@@ -28,6 +30,6 @@ func ConnectRedis(config *config.Config) *redis.Client {
 func checkRedisConnection(rdb *redis.Client) {
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
-		log.Fatalf("failed to connect to Redis: %v", err)
+		logg.Logger.Fatal(errormessage.ErrFailedToConnectRedisText, zap.Error(err))
 	}
 }

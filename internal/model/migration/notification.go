@@ -2,28 +2,31 @@ package migration
 
 import (
 	"github.com/arifai/zenith/internal/model"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"log"
 	"time"
 )
 
 // NotificationMigration performs the internal of the PushNotification table by dropping the existing table and creating a new one.
 func (m *Migration) NotificationMigration() {
 	if err := createEnums(m.db); err != nil {
-		log.Fatalf("error creating enums table: %v", err)
+		logg.Logger.Error(errormessage.ErrCreatingEnumsText, zap.String("migration_name", "notification"), zap.Error(err))
 		return
 	}
 
 	if err := migrateNotification(m, &model.PushNotification{}, &model.Notification{}); err != nil {
-		log.Fatalf("Error during notification internal: %v", err)
+		logg.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "notification"), zap.Error(err))
+		return
 	}
 
 	notifications := createDummiesNotifications(m.id)
 
 	for _, notification := range notifications {
 		if err := insertRecord(m.db, notification); err != nil {
-			log.Fatalf("Error during insert notification internal: %v", err)
+			logg.Logger.Error(errormessage.ErrInsertingMigrationDataText, zap.String("migration_name", "notification"), zap.Error(err))
 			return
 		}
 	}
@@ -60,7 +63,6 @@ func createEnums(db *gorm.DB) error {
 
 func createDummiesNotifications(id uuid.UUID) [2]*model.Notification {
 	readAt := time.Now()
-
 	return [2]*model.Notification{
 		{
 			ID:               uuid.New(),

@@ -1,3 +1,5 @@
 .env
 .idea
+info.log
+error.log
 firebase_service_account_key.json

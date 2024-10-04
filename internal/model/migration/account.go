@@ -3,9 +3,11 @@ package migration
 import (
 	"github.com/arifai/zenith/internal/model"
 	"github.com/arifai/zenith/pkg/crypto"
+	"github.com/arifai/zenith/pkg/errormessage"
+	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"log"
 )
 
 // AccountMigration performs the migration of the Account and AccountPassHashed tables. It drops the existing tables, creates
@@ -36,7 +38,7 @@ func (m *Migration) AccountMigration() {
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("Error during account migration: %v", err)
+		logg.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "account"), zap.Error(err))
 	}
 }
 
