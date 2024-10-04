@@ -8,6 +8,7 @@ import (
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"io"
 	"math"
 	"net/http"
@@ -39,6 +40,7 @@ type (
 		Limit  int    `form:"limit" validate:"omitempty"`
 		Search string `form:"search" validate:"omitempty"`
 		Sort   string `form:"sort" validate:"omitempty"`
+		Desc   bool   `form:"desc" validate:"omitempty"`
 	}
 )
 
@@ -161,7 +163,11 @@ func (r Response) NotFound(c *gin.Context, message string) {
 }
 
 func (p Pagination) GetOffset() int {
-	return (p.getOffset() - 1) * p.GetLimit()
+	if p.Offset == 0 {
+		p.Offset = 1
+	}
+
+	return (p.Offset - 1) * p.GetLimit()
 }
 
 func (p Pagination) GetLimit() int {
@@ -172,28 +178,20 @@ func (p Pagination) GetLimit() int {
 	return p.Limit
 }
 
-func (p Pagination) getOffset() int {
-	if p.Offset == 0 {
-		p.Offset = 1
-	}
-
-	return p.Offset
-}
-
 func (p Pagination) GetPage(count int64) int {
-	var page int
 	if count == 0 {
-		page = 0
-	} else {
-		page = p.getOffset()
+		return 0
 	}
 
-	return page
+	limit := p.GetLimit()
+	offset := p.GetOffset()
+
+	return (offset / limit) + 1
 }
 
 func (p Pagination) GetSort() string {
 	if p.Sort == "" {
-		p.Sort = "created_at asc"
+		p.Sort = "created_at"
 	}
 
 	return validateSort(p.Sort)
@@ -208,13 +206,18 @@ func (p Pagination) GetTotalPages(count int64) int {
 	return int(math.Ceil(float64(count) / float64(limit)))
 }
 
-// Paginate applies pagination, sorting, and search functionality to a database query using GORM.
-// It takes a pointer to a Pagination struct that contains limit, offset, search, and sort values.
-// Additionally, it accepts a `column` parameter which specifies the database column to be used for the search.
+// Paginate applies pagination, sorting, and search functionality to a GORM database query.
+// It uses values from the Pagination struct, including limit, offset, search, sort column, and a boolean (Desc) for sorting direction.
+// The `column` parameter specifies the database column to be used for search functionality.
 //
-// The function ensures that only alphanumeric column names are allowed to prevent SQL injection risks.
+// Features:
+// - Pagination: Applies limit and offset to control the number of records returned.
+// - Sorting: Sorts results by the specified column and applies ascending or descending order based on the Desc flag.
+// - Search: Filters results using the search term applied to the specified column.
 //
-// Important: This function must be used within a GORM Scope to properly apply pagination, search, and sorting to the query.
+// To mitigate SQL injection risks, only alphanumeric column names are allowed for sorting and searching.
+//
+// Important: This function should be used within a GORM Scope to apply pagination, sorting, and search functionality correctly.
 func Paginate(paging *Pagination, column string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if paging.Search != "" {
@@ -226,7 +229,10 @@ func Paginate(paging *Pagination, column string) func(db *gorm.DB) *gorm.DB {
 			}
 		}
 
-		return db.Offset(paging.GetOffset()).Limit(paging.GetLimit()).Order(paging.GetSort())
+		sort := paging.GetSort()
+
+		return db.Offset(paging.GetOffset()).Limit(paging.GetLimit()).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: sort}, Desc: paging.Desc})
 	}
 }
 
@@ -263,12 +269,12 @@ func validateSort(sort string) string {
 
 	parts := strings.Fields(strings.TrimSpace(sort))
 	if len(parts) != 2 {
-		return "created_at asc"
+		return "created_at"
 	}
 
 	field, direction := parts[0], parts[1]
 	if !allowedFields[field] || !allowedDirections[direction] {
-		return "created_at asc"
+		return "created_at"
 	}
 
 	return field + " " + direction
