@@ -247,13 +247,12 @@ func isAlphaNumeric(s string) bool {
 
 // validateSort sanitizes and validates the provided sort parameter to prevent SQL injection vulnerabilities (CWE-89).
 //
-// This function ensures that the input sort string only contains valid field names ("id" or "created_at")
-// and valid sort directions ("asc" or "desc"). If the input is invalid or contains unexpected values,
-// it defaults to "created_at asc" to maintain safety.
+// This function ensures that the input sort string only contains valid field names (e.g., "id" or "created_at").
+// If the input is invalid or contains unexpected values, the function defaults to "created_at" to ensure safety.
 //
 // Security:
-//   - This function mitigates potential SQL injection attacks (CWE-89) by strictly validating the input
-//     against allowed fields and directions, ensuring only safe and expected values are used in SQL queries.
+//   - This function mitigates SQL injection attacks (CWE-89) by only allowing sorting on predefined fields
+//     and rejecting any invalid input that could be used maliciously.
 //
 // Reference: https://cwe.mitre.org/data/definitions/89.html
 func validateSort(sort string) string {
@@ -262,20 +261,15 @@ func validateSort(sort string) string {
 		"created_at": true,
 	}
 
-	allowedDirections := map[string]bool{
-		"asc":  true,
-		"desc": true,
-	}
-
 	parts := strings.Fields(strings.TrimSpace(sort))
 	if len(parts) != 2 {
 		return "created_at"
 	}
 
-	field, direction := parts[0], parts[1]
-	if !allowedFields[field] || !allowedDirections[direction] {
+	field := parts[0]
+	if !allowedFields[field] {
 		return "created_at"
 	}
 
-	return field + " " + direction
+	return field
 }
