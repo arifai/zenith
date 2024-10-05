@@ -78,15 +78,12 @@ func validateStruct(body interface{}) []IError {
 		var validationErrors validator.ValidationErrors
 		if errors.As(err, &validationErrors) {
 			for _, err := range validationErrors {
-				var errMsg string
+				errMsg := err.Translate(trans)
 
-				field, found := reflect.TypeOf(body).Elem().FieldByName(err.StructField())
-				if !found {
-					errMsg = err.Translate(trans)
-				} else {
-					errMsg = getCustomReason(field, err.Tag())
-					if errMsg == "" {
-						errMsg = err.Translate(trans)
+				if field, found := reflect.TypeOf(body).Elem().FieldByName(err.StructField()); found {
+					customMsg := getCustomReason(field, err.Tag())
+					if customMsg != "" {
+						errMsg = customMsg
 					}
 				}
 
