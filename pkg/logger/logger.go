@@ -7,8 +7,10 @@ import (
 	"os"
 )
 
+// Logger is a global instance of *zap.Logger used for structured logging throughout the application.
 var Logger *zap.Logger
 
+// InitLogger initializes the global logger instance with separate log files for info and error levels.
 func InitLogger() {
 	consoleSyncer := zapcore.AddSync(os.Stdout)
 
