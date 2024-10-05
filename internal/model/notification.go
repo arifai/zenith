@@ -27,6 +27,8 @@ type (
 		CreatedAt time.Time         `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
 	}
 
+	// Notification represents a notification sent to a user in the system.
+	// It contains information such as title, description, and read status.
 	Notification struct {
 		ID               uuid.UUID  `json:"id" gorm:"not null;primaryKey;type:uuid;default:uuid_generate_v4()"`
 		AccountID        uuid.UUID  `json:"account_id" gorm:"not null;column:account_id;type:uuid;index:idx_notification_account_id,hash"`

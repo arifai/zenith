@@ -9,15 +9,23 @@ import (
 )
 
 type (
+	// NotificationRepository defines methods for interacting with notifications in a data store.
+	// GetList fetches a list of notifications and the total count based on account ID and pagination info.
+	// MarkAsRead marks a specific notification as read by its ID and returns if it was found and updated successfully.
 	NotificationRepository interface {
+
+		// GetList fetches a list of notifications and the total count for a given account ID and pagination parameters.
 		GetList(id *uuid.UUID, paging *common.Pagination) (notifications []*model.Notification, count int64, err error)
 
-		MarkAsRead(id uuid.UUID) (founded bool, err error)
+		// MarkAsRead marks a specific notification as read by its ID and returns if it was found and updated successfully.
+		MarkAsRead(id string) (founded bool, err error)
 	}
 
+	// notificationRepository implements NotificationRepository interface, provides repository functions for notifications.
 	notificationRepository struct{ *Repository }
 )
 
+// NewNotificationRepository creates a new instance of NotificationRepository with the provided Repository parameter.
 func NewNotificationRepository(r *Repository) NotificationRepository {
 	return &notificationRepository{r}
 }
@@ -41,11 +49,16 @@ func (r *notificationRepository) GetList(id *uuid.UUID, paging *common.Paginatio
 	return notifications, count, nil
 }
 
-func (r *notificationRepository) MarkAsRead(id uuid.UUID) (founded bool, err error) {
+func (r *notificationRepository) MarkAsRead(id string) (founded bool, err error) {
 	now := time.Now()
+	parseID, err := uuid.Parse(id)
+	if err != nil {
+		return false, err
+	}
+
 	result := r.db.Model(&model.Notification{}).
 		Clauses(clause.Returning{}).
-		Where(&model.Notification{ID: id}).
+		Where(&model.Notification{ID: parseID}).
 		Updates(map[string]interface{}{"read": true, "read_at": &now})
 
 	if result.Error != nil {

@@ -78,9 +78,16 @@ func validateStruct(body interface{}) []IError {
 		var validationErrors validator.ValidationErrors
 		if errors.As(err, &validationErrors) {
 			for _, err := range validationErrors {
+				field, _ := reflect.TypeOf(body).Elem().FieldByName(err.StructField())
+				errMsg := getCustomReason(field, err.Tag())
+
+				if errMsg == "" {
+					errMsg = err.Translate(trans)
+				}
+
 				errs = append(errs, IError{
 					Field: err.Field(),
-					Value: err.Translate(trans),
+					Value: errMsg,
 				})
 			}
 		} else {
@@ -89,4 +96,19 @@ func validateStruct(body interface{}) []IError {
 	}
 
 	return errs
+}
+
+// getCustomReason retrieves a custom reason based on the validation tag from the struct field's "reason" tag.
+func getCustomReason(field reflect.StructField, validationTag string) string {
+	reasonTag := field.Tag.Get("reason")
+	rules := strings.Split(reasonTag, ";")
+
+	for _, rule := range rules {
+		parts := strings.SplitN(rule, ":", 2)
+		if len(parts) == 2 && parts[0] == validationTag {
+			return parts[1]
+		}
+	}
+
+	return ""
 }

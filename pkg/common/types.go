@@ -35,6 +35,7 @@ type (
 		TotalPages int   `json:"total_pages"`
 	}
 
+	// Pagination struct handles fields required for paginating, searching, and sorting a collection of items.
 	Pagination struct {
 		Offset int    `form:"offset" validate:"omitempty"`
 		Limit  int    `form:"limit" validate:"omitempty"`
@@ -162,6 +163,8 @@ func (r Response) NotFound(c *gin.Context, message string) {
 	})
 }
 
+// GetOffset returns the offset value for a paginated query.
+// If the offset is not set, it defaults to 1. The returned value is calculated as (Offset - 1) * Limit.
 func (p Pagination) GetOffset() int {
 	if p.Offset == 0 {
 		p.Offset = 1
@@ -170,6 +173,8 @@ func (p Pagination) GetOffset() int {
 	return (p.Offset - 1) * p.GetLimit()
 }
 
+// GetLimit returns the limit value for a paginated query.
+// If the limit is not set, it defaults to 10.
 func (p Pagination) GetLimit() int {
 	if p.Limit == 0 {
 		p.Limit = 10
@@ -178,6 +183,7 @@ func (p Pagination) GetLimit() int {
 	return p.Limit
 }
 
+// GetPage calculates and returns the current page number based on the given total item count.
 func (p Pagination) GetPage(count int64) int {
 	if count == 0 {
 		return 0
@@ -189,6 +195,7 @@ func (p Pagination) GetPage(count int64) int {
 	return (offset / limit) + 1
 }
 
+// GetSort returns the sort field for a query. It defaults to "created_at" if no sort field is specified.
 func (p Pagination) GetSort() string {
 	if p.Sort == "" {
 		p.Sort = "created_at"
@@ -197,6 +204,7 @@ func (p Pagination) GetSort() string {
 	return validateSort(p.Sort)
 }
 
+// GetTotalPages returns the total number of pages given the total item count.
 func (p Pagination) GetTotalPages(count int64) int {
 	limit := p.GetLimit()
 	if limit == 0 {
@@ -236,6 +244,7 @@ func Paginate(paging *Pagination, column string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+// isAlphaNumeric checks if a given string consists only of alphanumeric characters (a-z, 0-9).
 func isAlphaNumeric(s string) bool {
 	for _, char := range s {
 		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
