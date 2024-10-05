@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// NotificationRouter sets up routes for handling notification-related requests with required middleware.
 func NotificationRouter(group *gin.RouterGroup, notificationHandler *handler.NotificationHandler, middleware *middleware.StrictAuthMiddleware) {
 	notificationGroup := group.Group("/notification", middleware.StrictAuth())
 	setupNotificationRoutes := func(group *gin.RouterGroup) {

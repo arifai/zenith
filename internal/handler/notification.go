@@ -8,11 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// NotificationHandler is responsible for handling notification-related HTTP requests.
 type NotificationHandler struct {
 	*Handler
 	notificationService service.NotificationService
 }
 
+// NewNotificationHandler creates a new instance of NotificationHandler with the given Handler and NotificationService.
 func NewNotificationHandler(handler *Handler, notificationService service.NotificationService) *NotificationHandler {
 	return &NotificationHandler{
 		Handler:             handler,
@@ -20,6 +22,7 @@ func NewNotificationHandler(handler *Handler, notificationService service.Notifi
 	}
 }
 
+// GetList retrieves a paginated list of notifications for the account specified in the context.
 func (h *NotificationHandler) GetList(ctx *gin.Context) {
 	paging, err := utils.ValidateQuery[common.Pagination](ctx)
 	if err != nil {
@@ -42,6 +45,7 @@ func (h *NotificationHandler) GetList(ctx *gin.Context) {
 	h.response.Success(ctx, entries)
 }
 
+// MarkAsRead marks a specified notification as read.
 func (h *NotificationHandler) MarkAsRead(ctx *gin.Context) {
 	body, err := utils.ValidateBody[request.NotificationMarkAsReadRequest](ctx)
 	if err != nil {

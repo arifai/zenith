@@ -1,10 +1,8 @@
 package request
 
-import "github.com/google/uuid"
-
 type (
-	// NotificationMarkAsReadRequest FIXME: Handle if the UUID has empty string.
+	// NotificationMarkAsReadRequest represents a request to mark a notification as read.
 	NotificationMarkAsReadRequest struct {
-		ID uuid.UUID `json:"id" validate:"required,uuid"`
+		ID string `json:"id" validate:"required,uuid" reason:"required:ID is required;uuid:ID must be a valid UUID"`
 	}
 )
