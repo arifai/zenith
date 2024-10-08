@@ -9,6 +9,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"net/url"
 	"time"
 )
 
@@ -19,14 +20,20 @@ func ConnectDatabase(cfg *config.Config) *gorm.DB {
 
 	dsn := buildDSN(cfg)
 	nowFunc := getNowFunc(cfg.Timezone)
-	return connectDatabaseWithDSN(dsn, nowFunc)
+	return connectDatabaseWithDSN(dsn, cfg.Debug, nowFunc)
 }
 
 // connectDatabaseWithDSN is a helper function to facilitate testing by separating the creation of
 // the DSN from the actual connection logic.
-func connectDatabaseWithDSN(dsn string, nowFunc func() time.Time) *gorm.DB {
+func connectDatabaseWithDSN(dsn string, debug bool, nowFunc func() time.Time) *gorm.DB {
+	logLevel := logger.Silent
+	if debug {
+		logg.Logger.Info("database debug mode enabled")
+		logLevel = logger.Info
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:  logger.Default.LogMode(logger.Silent),
+		Logger:  logger.Default.LogMode(logLevel),
 		NowFunc: nowFunc,
 	})
 	if err != nil {
@@ -45,11 +52,20 @@ func connectDatabaseWithDSN(dsn string, nowFunc func() time.Time) *gorm.DB {
 	return db
 }
 
-// buildDSN constructs the database source name from the provided configuration.
+// buildDSN constructs the Data Source Name (DSN) for connecting to a PostgreSQL database using the provided configuration settings.
 func buildDSN(cfg *config.Config) string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		cfg.DatabaseHost, cfg.DatabaseUser, cfg.DatabasePassword, cfg.DatabaseName,
-		cfg.DatabasePort, cfg.SslMode)
+	query := url.Values{}
+	query.Add("sslmode", cfg.SslMode)
+
+	u := &url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(cfg.DatabaseUser, cfg.DatabasePassword),
+		Host:     fmt.Sprintf("%s:%s", cfg.DatabaseHost, cfg.DatabasePort),
+		Path:     cfg.DatabaseName,
+		RawQuery: query.Encode(),
+	}
+
+	return u.String()
 }
 
 // getNowFunc returns a function that provides the current time in the configured timezone.
