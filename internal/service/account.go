@@ -153,7 +153,7 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 		return err
 	}
 
-	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
+	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
 		return err
 	}
 
