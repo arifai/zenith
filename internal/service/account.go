@@ -242,8 +242,6 @@ func generatePasswordHash(password, salt string) (string, error) {
 func validateAccount(account *model.Account, password string) error {
 	if !account.Active {
 		return errormessage.ErrAccountNotActive
-	} else if account.AccountPassHashed == nil || account.AccountPassHashed.PassHashed == "" {
-		return errormessage.ErrAccountPasswordHashMissing
 	}
 
 	valid, err := crypto.VerifyHash(password, account.AccountPassHashed.PassHashed)
