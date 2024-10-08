@@ -2,14 +2,9 @@ package crypto
 
 import (
 	"aidanwoods.dev/go-paseto"
-	"crypto/hmac"
-	"crypto/rand"
-	"crypto/sha512"
-	"encoding/hex"
 	"errors"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
-	"io"
 	"log"
 	"time"
 )
@@ -44,30 +39,6 @@ func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) str
 	return token.V4Sign(secretKey, nil)
 }
 
-// GenerateHMAC takes a message string and generates the HMAC using a random secret key.
-func GenerateHMAC(message string) (string, error) {
-	randomSecret, err := generateRandomSecret(64)
-	if err != nil {
-		return "", err
-	}
-
-	key := []byte(randomSecret)
-	h := hmac.New(sha512.New, key)
-	h.Write([]byte(message))
-
-	return hex.EncodeToString(h.Sum(nil)), nil
-}
-
-// generateRandomSecret generates a random secret key of the given length
-func generateRandomSecret(length int) (string, error) {
-	key := make([]byte, length)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(key), nil
-}
-
 // VerifyToken verifies a given token using the provided public key, and returns the decoded TokenPayload if valid.
 func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPayload, error) {
 	parser := paseto.NewParser()
@@ -91,7 +62,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 		return nil, err
 	}
 
-	aud, err := parseUUID(parsedToken.GetAudience, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)
+	aud, err := parseUUID(parsedToken.GetAudience, errormessage.ErrFailedGetAudText, errormessage.ErrFailedParseAudText)
 	if err != nil {
 		return nil, err
 	}
