@@ -145,15 +145,15 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 		return errormessage.ErrInvalidRefreshTokenInBody
 	}
 
-	if err = a.accountRepo.UnsetFCMToken(verifyAccessToken.AccountId); err != nil {
-		return err
-	}
-
 	if err = a.blacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
 		return err
 	}
 
 	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
+		return err
+	}
+
+	if err = a.accountRepo.UnsetFCMToken(verifyAccessToken.AccountId); err != nil {
 		return err
 	}
 
