@@ -23,10 +23,12 @@ const (
 	ErrFailedGetJTIText                 = "failed to to get 'jti'"
 	ErrFailedParseJTIText               = "failed to parse 'jti'"
 	ErrFailedGetSubText                 = "failed to get 'sub'"
-	ErrFailedParseACIText               = "failed to parse account id"
+	ErrFailedParseACIText               = "failed to parse account ID"
 	ErrFailedGetIATText                 = "failed to get 'iat'"
 	ErrFailedGetNBFText                 = "failed to get 'nbf'"
 	ErrFailedGetEXPText                 = "failed to get 'exp'"
+	ErrFailedGetAudText                 = "failed to get 'aud'"
+	ErrFailedParseAudText               = "failed to parse 'aud'"
 	ErrTokenExpiredText                 = "token has expired"
 	ErrBadRequestText                   = "your request is invalid"
 	ErrRequestBodyEmptyText             = "request body is empty"
@@ -48,6 +50,7 @@ const (
 	ErrCreatingEnumsText                = "error creating enums"
 	ErrInsertingMigrationDataText       = "error during inserting migration data"
 	ErrFailedToParseUUIDText            = "failed to parse uuid"
+	ErrInvalidDeviceIDInBodyText        = "invalid device ID"
 )
 
 var (
@@ -68,4 +71,5 @@ var (
 	ErrInvalidAccessTokenInBody     = errors.New(ErrInvalidAccessTokenInBodyText)
 	ErrInvalidRefreshTokenInBody    = errors.New(ErrInvalidRefreshTokenInBodyText)
 	ErrAccountNotFound              = errors.New(ErrAccountNotFoundText)
+	ErrInvalidDeviceIDInBody        = errors.New(ErrInvalidDeviceIDInBodyText)
 )

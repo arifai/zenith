@@ -115,6 +115,7 @@ func (a *accountService) Authorization(body *request.AccountAuthRequest) (*respo
 	parsedDeviceID, err := uuid.Parse(body.DeviceID)
 	if err != nil {
 		logger.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
+		return nil, errormessage.ErrInvalidDeviceIDInBody
 	}
 
 	accessToken, err := generateToken(account.ID, parsedDeviceID, crypto.AccessToken, time.Hour*6)
