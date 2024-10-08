@@ -2,9 +2,14 @@ package crypto
 
 import (
 	"aidanwoods.dev/go-paseto"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha512"
+	"encoding/hex"
 	"errors"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
+	"io"
 	"log"
 	"time"
 )
@@ -13,6 +18,7 @@ import (
 type TokenPayload struct {
 	Jti       uuid.UUID
 	AccountId uuid.UUID
+	DeviceID  uuid.UUID
 	IssuedAt  time.Time
 	NotBefore time.Time
 	ExpiresAt time.Time
@@ -27,13 +33,39 @@ const (
 // GenerateToken creates a signed token using the given secret key.
 func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) string {
 	token := paseto.NewToken()
+	token.SetAudience(t.DeviceID.String())
 	token.SetJti(t.Jti.String())
 	token.SetSubject(t.AccountId.String())
 	token.SetIssuedAt(t.IssuedAt)
 	token.SetNotBefore(t.NotBefore)
 	token.SetExpiration(t.ExpiresAt)
 	token.SetFooter([]byte(t.TokenType))
+
 	return token.V4Sign(secretKey, nil)
+}
+
+// GenerateHMAC takes a message string and generates the HMAC using a random secret key.
+func GenerateHMAC(message string) (string, error) {
+	randomSecret, err := generateRandomSecret(64)
+	if err != nil {
+		return "", err
+	}
+
+	key := []byte(randomSecret)
+	h := hmac.New(sha512.New, key)
+	h.Write([]byte(message))
+
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// generateRandomSecret generates a random secret key of the given length
+func generateRandomSecret(length int) (string, error) {
+	key := make([]byte, length)
+	if _, err := io.ReadFull(rand.Reader, key); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(key), nil
 }
 
 // VerifyToken verifies a given token using the provided public key, and returns the decoded TokenPayload if valid.
@@ -55,6 +87,11 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	}
 
 	jti, err := parseUUID(parsedToken.GetJti, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)
+	if err != nil {
+		return nil, err
+	}
+
+	aud, err := parseUUID(parsedToken.GetAudience, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +124,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 
 	tokenPayload := &TokenPayload{
 		Jti:       jti,
+		DeviceID:  aud,
 		AccountId: accountId,
 		IssuedAt:  issuedAt,
 		NotBefore: notBefore,
