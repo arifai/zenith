@@ -56,7 +56,7 @@ func (a *accountRepository) FindByEmail(email string) (*model.Account, error) {
 
 func (a *accountRepository) FindByID(id *uuid.UUID) (*model.Account, error) {
 	account := new(model.Account)
-	if err := a.db.First(account, id).Error; err != nil {
+	if err := a.db.Preload("AccountPassHashed").Where("id = ?", id).First(&account).Error; err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,8 @@ func (a *accountRepository) Update(account *model.Account) error {
 }
 
 func (a *accountRepository) UpdatePassword(account *model.Account) error {
-	return a.db.Where(&model.AccountPassHashed{AccountId: account.ID}).
+	return a.db.Model(&model.AccountPassHashed{}).
+		Where("account_id = ?", account.ID).
 		Update("pass_hashed", account.AccountPassHashed.PassHashed).Error
 }
 

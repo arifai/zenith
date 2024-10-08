@@ -215,7 +215,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 	}
 
 	if err := validateAccount(account, body.OldPassword); err != nil {
-		return errormessage.ErrWrongOldPassword
+		return err
 	}
 
 	passwordHash, err := generatePasswordHash(body.NewPassword, a.config.PasswordSalt)
@@ -223,8 +223,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	accountPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: passwordHash}
-	account.AccountPassHashed = accountPassHashed
+	account.AccountPassHashed = &model.AccountPassHashed{AccountId: account.ID, PassHashed: passwordHash}
 
 	if err := a.accountRepo.UpdatePassword(account); err != nil {
 		return err
@@ -243,7 +242,7 @@ func generatePasswordHash(password, salt string) (string, error) {
 func validateAccount(account *model.Account, password string) error {
 	if !account.Active {
 		return errormessage.ErrAccountNotActive
-	} else if account.AccountPassHashed == nil {
+	} else if account.AccountPassHashed == nil || account.AccountPassHashed.PassHashed == "" {
 		return errormessage.ErrAccountPasswordHashMissing
 	}
 
@@ -251,7 +250,7 @@ func validateAccount(account *model.Account, password string) error {
 	if err != nil {
 		return err
 	} else if !valid {
-		return errormessage.ErrIncorrectPassword
+		return errormessage.ErrWrongOldPassword
 	}
 
 	return nil
