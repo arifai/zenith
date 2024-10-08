@@ -21,6 +21,7 @@ type (
 		Email    string `json:"email" validate:"required,email" reason:"required:Email is required;email:Invalid email address"`
 		FcmToken string `json:"fcm_token" validate:"required" reason:"required:FCM token is required"`
 		Password string `json:"password" validate:"required,min=8,max=100" reason:"required:Password is required;min:Password must be at least 8 characters;max:Password must be at most 100 characters"`
+		DeviceID string `json:"device_id" validate:"required,uuid" reason:"required:Device ID is required;uuid:Device ID must be a valid UUID"`
 	}
 
 	// AccountUnauthRequest represents the request payload for unauthenticating an account by invalidating access and refresh tokens.

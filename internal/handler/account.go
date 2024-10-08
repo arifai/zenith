@@ -15,10 +15,7 @@ type AccountHandler struct {
 
 // NewAccountHandler initializes a new AccountHandler with the provided Handler and AccountService.
 func NewAccountHandler(handler *Handler, accountService service.AccountService) *AccountHandler {
-	return &AccountHandler{
-		Handler:        handler,
-		accountService: accountService,
-	}
+	return &AccountHandler{Handler: handler, accountService: accountService}
 }
 
 // Register handles HTTP requests for creating a new user account.
@@ -74,6 +71,24 @@ func (a *AccountHandler) Unauthorization(ctx *gin.Context) {
 	a.response.Success(ctx, nil)
 }
 
+// RefreshToken handles the HTTP request to refresh an authentication token.
+// It validates the request body and invokes the account service's RefreshToken method.
+func (a *AccountHandler) RefreshToken(ctx *gin.Context) {
+	body, err := utils.ValidateBody[request.AccountRefreshTokenRequest](ctx)
+	if err != nil {
+		a.response.Error(ctx, err)
+		return
+	}
+
+	result, err := a.accountService.RefreshToken(body)
+	if err != nil {
+		a.response.Error(ctx, err)
+		return
+	}
+
+	a.response.Success(ctx, result)
+}
+
 // GetCurrent handles the retrieval of the current account details based on the account ID from the context.
 func (a *AccountHandler) GetCurrent(ctx *gin.Context) {
 	accountId := GetAccountIDFromContext(ctx)
@@ -111,6 +126,9 @@ func (a *AccountHandler) Update(ctx *gin.Context) {
 	a.response.Success(ctx, account)
 }
 
+// UpdatePassword handles the HTTP request to update an account's password.
+// It retrieves the account ID from the context and validates the request body.
+// If validation passes, it calls the account service to update the password and sends an appropriate response.
 func (a *AccountHandler) UpdatePassword(ctx *gin.Context) {
 	accountId := GetAccountIDFromContext(ctx)
 	body, err := utils.ValidateBody[request.AccountUpdatePasswordRequest](ctx)

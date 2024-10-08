@@ -24,9 +24,11 @@ type (
 		// UpdatePassword updates the hashed password of an account in the database. Returns an error if the update operation fails.
 		UpdatePassword(account *model.Account) error
 
+		// SetFCMToken updates the FCM token for an account identified by the provided email address. Returns an error if the update fails.
 		SetFCMToken(email, fcmToken string) error
 
-		RemoveFCMToken(id uuid.UUID) error
+		// UnsetFCMToken unsets the FCM token for the account associated with the specified UUID, removing the existing token if present.
+		UnsetFCMToken(id uuid.UUID) error
 	}
 
 	// accountRepository encapsulates a Repository to provide specific methods for handling account data.
@@ -75,7 +77,7 @@ func (a *accountRepository) SetFCMToken(email, fcmToken string) error {
 		Update("fcm_token", fcmToken).Error
 }
 
-func (a *accountRepository) RemoveFCMToken(id uuid.UUID) error {
+func (a *accountRepository) UnsetFCMToken(id uuid.UUID) error {
 	return a.db.Model(&model.Account{}).Where(&model.Account{ID: id}).
 		Update("fcm_token", nil).Error
 }
