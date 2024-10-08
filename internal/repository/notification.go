@@ -18,7 +18,7 @@ type (
 		GetList(id *uuid.UUID, paging *common.Pagination) (notifications []*model.Notification, count int64, err error)
 
 		// MarkAsRead marks a specific notification as read by its ID and returns if it was found and updated successfully.
-		MarkAsRead(id string) (founded bool, err error)
+		MarkAsRead(id uuid.UUID) (founded bool, err error)
 	}
 
 	// notificationRepository implements NotificationRepository interface, provides repository functions for notifications.
@@ -49,17 +49,11 @@ func (r *notificationRepository) GetList(id *uuid.UUID, paging *common.Paginatio
 	return notifications, count, nil
 }
 
-func (r *notificationRepository) MarkAsRead(id string) (founded bool, err error) {
-	now := time.Now()
-	parseID, err := uuid.Parse(id)
-	if err != nil {
-		return false, err
-	}
-
+func (r *notificationRepository) MarkAsRead(id uuid.UUID) (founded bool, err error) {
 	result := r.db.Model(&model.Notification{}).
 		Clauses(clause.Returning{}).
-		Where(&model.Notification{ID: parseID}).
-		Updates(map[string]interface{}{"read": true, "read_at": &now})
+		Where(&model.Notification{ID: id}).
+		Updates(map[string]interface{}{"read": true, "read_at": time.Now()})
 
 	if result.Error != nil {
 		return false, result.Error

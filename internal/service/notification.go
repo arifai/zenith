@@ -4,7 +4,10 @@ import (
 	"github.com/arifai/zenith/internal/model"
 	"github.com/arifai/zenith/internal/repository"
 	"github.com/arifai/zenith/pkg/common"
+	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type (
@@ -47,5 +50,10 @@ func (s *notificationService) GetList(id *uuid.UUID, paging *common.Pagination) 
 }
 
 func (s *notificationService) MarkAsRead(id string) (founded bool, err error) {
-	return s.notificationRepo.MarkAsRead(id)
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		logger.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", id), zap.Error(err))
+		return
+	}
+	return s.notificationRepo.MarkAsRead(parsedID)
 }

@@ -13,6 +13,7 @@ import (
 type TokenPayload struct {
 	Jti       uuid.UUID
 	AccountId uuid.UUID
+	DeviceID  uuid.UUID
 	IssuedAt  time.Time
 	NotBefore time.Time
 	ExpiresAt time.Time
@@ -27,12 +28,14 @@ const (
 // GenerateToken creates a signed token using the given secret key.
 func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) string {
 	token := paseto.NewToken()
+	token.SetAudience(t.DeviceID.String())
 	token.SetJti(t.Jti.String())
 	token.SetSubject(t.AccountId.String())
 	token.SetIssuedAt(t.IssuedAt)
 	token.SetNotBefore(t.NotBefore)
 	token.SetExpiration(t.ExpiresAt)
 	token.SetFooter([]byte(t.TokenType))
+
 	return token.V4Sign(secretKey, nil)
 }
 
@@ -55,6 +58,11 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	}
 
 	jti, err := parseUUID(parsedToken.GetJti, errormessage.ErrFailedGetJTIText, errormessage.ErrFailedParseJTIText)
+	if err != nil {
+		return nil, err
+	}
+
+	aud, err := parseUUID(parsedToken.GetAudience, errormessage.ErrFailedGetAudText, errormessage.ErrFailedParseAudText)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +95,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 
 	tokenPayload := &TokenPayload{
 		Jti:       jti,
+		DeviceID:  aud,
 		AccountId: accountId,
 		IssuedAt:  issuedAt,
 		NotBefore: notBefore,

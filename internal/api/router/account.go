@@ -16,6 +16,7 @@ func AccountRouter(group *gin.RouterGroup, accountHandler *handler.AccountHandle
 	setupAccountAuthRoutes := func(g *gin.RouterGroup) {
 		accountAuthGroup.POST("/registration", accountHandler.Register)
 		accountAuthGroup.POST("/authorization", accountHandler.Authorization)
+		accountAuthGroup.POST("/refresh", accountHandler.RefreshToken)
 		accountAuthGroup.POST("/unauthorization", middleware.StrictAuth(), accountHandler.Unauthorization)
 	}
 

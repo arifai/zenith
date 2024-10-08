@@ -10,7 +10,9 @@ import (
 	"github.com/arifai/zenith/internal/types/response"
 	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"time"
 )
@@ -28,7 +30,7 @@ type (
 		Unauthorization(body *request.AccountUnauthRequest) error
 
 		// RefreshToken refreshes the access and refresh tokens for a given account ID if the provided refresh token is valid.
-		RefreshToken(id uuid.UUID, body *request.AccountRefreshTokenRequest) (*response.AccountAuthResponse, error)
+		RefreshToken(body *request.AccountRefreshTokenRequest) (*response.AccountAuthResponse, error)
 
 		// GetCurrent retrieves the current account details by the given account ID (uuid.UUID).
 		GetCurrent(id *uuid.UUID) (*model.Account, error)
@@ -36,6 +38,7 @@ type (
 		// Update updates an existing account's details such as FullName and Email based on the provided id and request body.
 		Update(id *uuid.UUID, body *request.AccountUpdateRequest) (*model.Account, error)
 
+		// UpdatePassword updates the password of an account identified by the given UUID. It takes the new password and the old password for validation. Returns an error if the operation fails.
 		UpdatePassword(id *uuid.UUID, body *request.AccountUpdatePasswordRequest) error
 	}
 
@@ -48,10 +51,7 @@ type (
 
 // NewAccountService initializes and returns an AccountService instance with the provided Service and AccountRepository.
 func NewAccountService(service *Service, accountRepo repository.AccountRepository) AccountService {
-	return &accountService{
-		Service:     service,
-		accountRepo: accountRepo,
-	}
+	return &accountService{Service: service, accountRepo: accountRepo}
 }
 
 func (a *accountService) Register(body *request.AccountCreateRequest) (*model.Account, error) {
@@ -112,12 +112,18 @@ func (a *accountService) Authorization(body *request.AccountAuthRequest) (*respo
 		return nil, err
 	}
 
-	accessToken, err := generateToken(account.ID, crypto.AccessToken, time.Hour*24)
+	parsedDeviceID, err := uuid.Parse(body.DeviceID)
+	if err != nil {
+		logger.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
+		return nil, errormessage.ErrInvalidDeviceIDInBody
+	}
+
+	accessToken, err := generateToken(account.ID, parsedDeviceID, crypto.AccessToken, time.Hour*6)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := generateToken(account.ID, crypto.RefreshToken, time.Hour*24*30)
+	refreshToken, err := generateToken(account.ID, parsedDeviceID, crypto.RefreshToken, time.Hour*24*30)
 	if err != nil {
 		return nil, err
 	}
@@ -134,37 +140,27 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 		return errormessage.ErrInvalidAccessTokenInBody
 	}
 
-	if err = a.accountRepo.RemoveFCMToken(verifyAccessToken.AccountId); err != nil {
-		return err
+	verifyRefreshToken, err := crypto.VerifyToken(body.RefreshToken, config.PublicKey)
+	if err != nil {
+		return errormessage.ErrInvalidRefreshTokenInBody
 	}
 
 	if err = a.blacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
 		return err
 	}
 
-	verifyRefreshToken, err := crypto.VerifyToken(body.RefreshToken, config.PublicKey)
-	if err != nil {
-		return errormessage.ErrInvalidRefreshTokenInBody
+	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
+		return err
 	}
 
-	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
+	if err = a.accountRepo.UnsetFCMToken(verifyAccessToken.AccountId); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (a *accountService) RefreshToken(id uuid.UUID, body *request.AccountRefreshTokenRequest) (*response.AccountAuthResponse, error) {
-	accessToken, err := generateToken(id, crypto.AccessToken, time.Hour*24)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := generateToken(id, crypto.RefreshToken, time.Hour*24*30)
-	if err != nil {
-		return nil, err
-	}
-
+func (a *accountService) RefreshToken(body *request.AccountRefreshTokenRequest) (*response.AccountAuthResponse, error) {
 	verifyRefreshToken, err := crypto.VerifyToken(body.RefreshToken, config.PublicKey)
 	if err != nil {
 		return nil, errormessage.ErrInvalidRefreshTokenInBody
@@ -174,10 +170,17 @@ func (a *accountService) RefreshToken(id uuid.UUID, body *request.AccountRefresh
 		return nil, err
 	}
 
-	return &response.AccountAuthResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	accessToken, err := generateToken(verifyRefreshToken.AccountId, verifyRefreshToken.DeviceID, crypto.AccessToken, time.Hour*6)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := generateToken(verifyRefreshToken.AccountId, verifyRefreshToken.DeviceID, crypto.RefreshToken, time.Hour*24*30)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.AccountAuthResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
 func (a *accountService) GetCurrent(id *uuid.UUID) (*model.Account, error) {
@@ -254,13 +257,14 @@ func validateAccount(account *model.Account, password string) error {
 	return nil
 }
 
-// generateToken creates a signed token for a given accountID, tokenType, and duration.
+// generateToken creates a signed token for a given accountID, deviceID, tokenType, and duration.
 // The generated token is returned as a string.
 // In case of failure to generate an access or refresh token, an appropriate error is returned.
-func generateToken(accountID uuid.UUID, tokenType string, duration time.Duration) (string, error) {
+func generateToken(accountID, deviceID uuid.UUID, tokenType string, duration time.Duration) (string, error) {
 	now := time.Now()
 	payload := crypto.TokenPayload{
 		Jti:       uuid.New(),
+		DeviceID:  deviceID,
 		AccountId: accountID,
 		IssuedAt:  now,
 		NotBefore: now,
