@@ -12,6 +12,7 @@ import (
 type (
 	// Config contains configuration settings loaded from environment variables.
 	Config struct {
+		Debug            bool   `env:"DEBUG"`
 		DatabaseHost     string `env:"DB_HOST"`
 		DatabasePort     string `env:"DB_PORT"`
 		DatabaseName     string `env:"DB_NAME"`
