@@ -45,13 +45,13 @@ func (a *accountRepository) Create(account *model.Account) error {
 }
 
 func (a *accountRepository) FindByEmail(email string) (*model.Account, error) {
-	var account model.Account
+	account := &model.Account{}
 	if err := a.db.Where(&model.Account{Email: email}).Preload("AccountPassHashed").
 		First(account).Error; err != nil {
 		return nil, err
 	}
 
-	return &account, nil
+	return account, nil
 }
 
 func (a *accountRepository) FindByID(id *uuid.UUID) (*model.Account, error) {
