@@ -4,7 +4,7 @@ type (
 	// AccountCreateRequest represents the payload required to create a new user account.
 	// It includes the user's FullName, Email, and Password, all of which are mandatory fields.
 	AccountCreateRequest struct {
-		FullName string `json:"full_name" validate:"required,min=3,max=100" reason:"required:Full name is required"`
+		FullName string `json:"full_name" validate:"required,min=3,max=100" reason:"required:Full name is required;min:Full name must be at least 3 characters;max:Full name must be at most 100 characters"`
 		Email    string `json:"email" validate:"required,email" reason:"required:Email is required;email:Invalid email address"`
 		Password string `json:"password" validate:"required,min=8,max=100" reason:"required:Password is required;min:Password must be at least 8 characters;max:Password must be at most 100 characters"`
 	}
