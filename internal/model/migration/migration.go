@@ -1,17 +1,19 @@
 package migration
 
 import (
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// Migration is a wrapper around *gorm.DB, providing methods for database migrations.
+// Migration enables smooth database schema transitions and logs operations for debugging and auditing purposes.
 type Migration struct {
-	db *gorm.DB
-	id uuid.UUID
+	*gorm.DB
+	uuid.UUID
+	logger.Logger
 }
 
-// New initializes a new instance of Migration with the provided *gorm.DB connection.
-func New(db *gorm.DB, id uuid.UUID) *Migration {
-	return &Migration{db: db, id: id}
+// New initializes a new Migration instance with the provided database connection, UUID, and logger.
+func New(db *gorm.DB, id uuid.UUID, log logger.Logger) *Migration {
+	return &Migration{db, id, log}
 }

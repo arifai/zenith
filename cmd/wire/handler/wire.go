@@ -9,6 +9,7 @@ import (
 	"github.com/arifai/zenith/internal/handler"
 	"github.com/arifai/zenith/internal/repository"
 	"github.com/arifai/zenith/internal/service"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -19,12 +20,12 @@ func ProvideHandler() *handler.Handler {
 	return &handler.Handler{}
 }
 
-func ProvideAccountHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *handler.AccountHandler {
+func ProvideAccountHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config, log logger.Logger) *handler.AccountHandler {
 	wire.Build(cmn.ProvideResponse, repo.ProvideRepository, handler.New, service.New, repository.NewAccountRepository, service.NewAccountService, handler.NewAccountHandler)
 	return &handler.AccountHandler{}
 }
 
-func ProvideNotificationHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *handler.NotificationHandler {
+func ProvideNotificationHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config, log logger.Logger) *handler.NotificationHandler {
 	wire.Build(cmn.ProvideResponse, repo.ProvideRepository, handler.New, service.New, repository.NewNotificationRepository, service.NewNotificationService, handler.NewNotificationHandler)
 	return &handler.NotificationHandler{}
 }

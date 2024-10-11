@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
+	logg "github.com/arifai/zenith/cmd/wire/logger"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,10 +13,12 @@ import (
 	"time"
 )
 
+var log = logg.ProvideLogger()
+
 // ConnectDatabase establishes a connection to the database using the provided configuration settings.
 // It returns a *gorm.DB instance for interacting with the database.
 func ConnectDatabase(cfg *config.Config) *gorm.DB {
-	logg.Logger.Info("connecting to database")
+	log.Info("connecting to database")
 
 	dsn := buildDSN(cfg)
 	nowFunc := getNowFunc(cfg.Timezone)
@@ -28,7 +30,7 @@ func ConnectDatabase(cfg *config.Config) *gorm.DB {
 func connectDatabaseWithDSN(dsn string, debug bool, nowFunc func() time.Time) *gorm.DB {
 	logLevel := logger.Silent
 	if debug {
-		logg.Logger.Info("database debug mode enabled")
+		log.Info("database debug mode enabled")
 		logLevel = logger.Info
 	}
 
@@ -37,12 +39,12 @@ func connectDatabaseWithDSN(dsn string, debug bool, nowFunc func() time.Time) *g
 		NowFunc: nowFunc,
 	})
 	if err != nil {
-		logg.Logger.Fatal(errormessage.ErrFailedToConnectDBText, zap.Error(err))
+		log.Fatal(errormessage.ErrFailedToConnectDBText, zap.Error(err))
 	}
 
 	sqlDb, sqlDBError := db.DB()
 	if sqlDBError != nil {
-		logg.Logger.Fatal(errormessage.ErrFailedGetDBInstanceText, zap.Error(sqlDBError))
+		log.Fatal(errormessage.ErrFailedGetDBInstanceText, zap.Error(sqlDBError))
 	}
 
 	sqlDb.SetMaxIdleConns(10)

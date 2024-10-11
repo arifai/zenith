@@ -25,7 +25,7 @@ func (m *MessagingService) SendMessage(data map[string]string, token, title, bod
 		return err
 	}
 
-	logg.Logger.Info("successful send push notification", zap.String("response", response))
+	logg.Logger{}.Info("successful send push notification", zap.String("response", response))
 
 	return nil
 }

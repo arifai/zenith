@@ -7,11 +7,11 @@ import (
 	"os"
 )
 
-// Logger is a global instance of *zap.Logger used for structured logging throughout the application.
-var Logger *zap.Logger
+// Logger is a wrapper around zap.Logger providing methods for structured logging.
+type Logger struct{ *zap.Logger }
 
-// InitLogger initializes the global logger instance with separate log files for info and error levels.
-func InitLogger() {
+// New initializes and returns a Logger instance with multiple syncers and encoders for logging.
+func New() Logger {
 	consoleSyncer := zapcore.AddSync(os.Stdout)
 
 	infoFileSyncer := zapcore.AddSync(&lumberjack.Logger{
@@ -50,8 +50,10 @@ func InitLogger() {
 		zapcore.NewCore(consoleEncoder, consoleSyncer, zapcore.DebugLevel),
 	)
 
-	Logger = zap.New(core, zap.AddCaller())
-	defer func(Logger *zap.Logger) {
-		_ = Logger.Sync()
-	}(Logger)
+	logger := Logger{zap.New(core, zap.AddCaller())}
+	defer func() {
+		_ = logger.Sync()
+	}()
+
+	return logger
 }

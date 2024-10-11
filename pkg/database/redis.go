@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
@@ -30,6 +29,6 @@ func ConnectRedis(config *config.Config) *redis.Client {
 func checkRedisConnection(rdb *redis.Client) {
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
-		logg.Logger.Fatal(errormessage.ErrFailedToConnectRedisText, zap.Error(err))
+		log.Fatal(errormessage.ErrFailedToConnectRedisText, zap.Error(err))
 	}
 }

@@ -107,7 +107,7 @@ func (m *MailerImpl) Worker() {
 			err = m.SendMail(email.to, email.subject, email.body)
 		}
 		if err != nil {
-			logg.Logger.Error(errormessage.ErrFailedSendEmailText, zap.Error(err))
+			logg.Logger{}.Error(errormessage.ErrFailedSendEmailText, zap.Error(err))
 		}
 	}
 }
