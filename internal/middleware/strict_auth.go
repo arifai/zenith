@@ -24,7 +24,7 @@ func NewStrictAuthMiddleware(middleware *Middleware) *StrictAuthMiddleware {
 // StrictAuth is a middleware function that validates and extracts the account from the authorization header.
 func (s *StrictAuthMiddleware) StrictAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		response := new(common.Response)
+		var response common.Response
 		id, err := s.validateAndExtractAccount(ctx)
 		if err != nil {
 			response.Unauthorized(ctx, []utils.IError{}, err.Error())
