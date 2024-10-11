@@ -3,11 +3,13 @@ package firebase
 import (
 	"context"
 	"firebase.google.com/go/v4/messaging"
-	logg "github.com/arifai/zenith/pkg/logger"
+	"github.com/arifai/zenith/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type MessagingService struct{ *Messaging }
+
+var log = logger.Logger{}
 
 func NewMessagingService(messaging *Messaging) *MessagingService {
 	return &MessagingService{messaging}
@@ -25,7 +27,7 @@ func (m *MessagingService) SendMessage(data map[string]string, token, title, bod
 		return err
 	}
 
-	logg.Logger{}.Info("successful send push notification", zap.String("response", response))
+	log.Info("successful send push notification", zap.String("response", response))
 
 	return nil
 }
