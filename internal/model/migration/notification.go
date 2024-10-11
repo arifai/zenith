@@ -3,7 +3,6 @@ package migration
 import (
 	"github.com/arifai/zenith/internal/model"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -12,21 +11,21 @@ import (
 
 // NotificationMigration performs the internal of the PushNotification table by dropping the existing table and creating a new one.
 func (m *Migration) NotificationMigration() {
-	if err := createEnums(m.db); err != nil {
-		logg.Logger.Error(errormessage.ErrCreatingEnumsText, zap.String("migration_name", "notification"), zap.Error(err))
+	if err := createEnums(m.DB); err != nil {
+		m.Logger.Error(errormessage.ErrCreatingEnumsText, zap.String("migration_name", "notification"), zap.Error(err))
 		return
 	}
 
 	if err := migrateNotification(m, &model.PushNotification{}, &model.Notification{}); err != nil {
-		logg.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "notification"), zap.Error(err))
+		m.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "notification"), zap.Error(err))
 		return
 	}
 
-	notifications := createDummiesNotifications(m.id)
+	notifications := createDummiesNotifications(m.UUID)
 
 	for _, notification := range notifications {
-		if err := insertRecord(m.db, notification); err != nil {
-			logg.Logger.Error(errormessage.ErrInsertingMigrationDataText, zap.String("migration_name", "notification"), zap.Error(err))
+		if err := insertRecord(m.DB, notification); err != nil {
+			m.Logger.Error(errormessage.ErrInsertingMigrationDataText, zap.String("migration_name", "notification"), zap.Error(err))
 			return
 		}
 	}
@@ -35,13 +34,13 @@ func (m *Migration) NotificationMigration() {
 // migrateNotification handles the internal for the given model by dropping the existing table and creating a new one.
 func migrateNotification(m *Migration, models ...interface{}) error {
 	for _, i := range models {
-		if m.db.Migrator().HasTable(i) {
-			if err := m.db.Migrator().DropTable(i); err != nil {
+		if m.Migrator().HasTable(i) {
+			if err := m.Migrator().DropTable(i); err != nil {
 				return err
 			}
 		}
 
-		if err := m.db.AutoMigrate(i); err != nil {
+		if err := m.AutoMigrate(i); err != nil {
 			return err
 		}
 	}

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/arifai/zenith/cmd/wire"
 	cfg "github.com/arifai/zenith/cmd/wire/config"
+	"github.com/arifai/zenith/cmd/wire/logger"
 	"github.com/arifai/zenith/cmd/wire/migration"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/database"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -22,13 +22,15 @@ const (
 	trustedProxyAddr = "127.0.0.1"
 )
 
+var log = logger.ProvideLogger()
+
 // Run initializes the environment and starts the server, logging errors if the server initialization fails.
 func Run() {
 	fmt.Println(banner())
-	logg.Logger.Info("Starting server")
+	log.Info("Starting server")
 	initializeConfig := cfg.ProvideConfig()
 	if err := initializeAndRunServer(initializeConfig); err != nil {
-		logg.Logger.Error(errormessage.ErrInitializingServerText, zap.Error(err))
+		log.Error(errormessage.ErrInitializingServerText, zap.Error(err))
 	}
 }
 
@@ -79,7 +81,7 @@ func connectRedis(config *config.Config) (*redis.Client, error) {
 func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 	migrate(db)
 	utils.SetupTranslation()
-	rtr := wire.InitializeRouter(db, rdb, config)
+	rtr := wire.InitializeRouter(db, rdb, config, log)
 
 	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
 		return fmt.Errorf(errormessage.ErrFailedSetTrustedProxiesText+"%v", err)
@@ -92,7 +94,7 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 }
 
 func migrate(db *gorm.DB) {
-	migrator := migration.ProvideMigration(db, uuid.New())
+	migrator := migration.ProvideMigration(db, uuid.New(), log)
 	migrator.AccountMigration()
 	migrator.NotificationMigration()
 }

@@ -12,9 +12,9 @@ type (
 		ID                uuid.UUID          `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 		FullName          string             `json:"full_name" gorm:"not null;column:full_name;type:varchar"`
 		Email             string             `json:"email" gorm:"not null;column:email;type:varchar;uniqueIndex:idx_account_email"`
-		Avatar            string             `json:"avatar" gorm:"column:avatar;type:varchar"`
+		Avatar            string             `json:"avatar" gorm:"column:avatar;type:varchar;default:null"`
 		Active            bool               `json:"active" gorm:"column:active;type:boolean;default:false"`
-		FcmToken          string             `json:"fcm_token" gorm:"column:fcm_token;type:varchar"`
+		FcmToken          string             `json:"fcm_token" gorm:"column:fcm_token;type:varchar;default:null"`
 		CreatedAt         time.Time          `json:"created_at" gorm:"column:created_at;autoCreateTime;default:CURRENT_TIMESTAMP"`
 		UpdatedAt         *time.Time         `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 		AccountPassHashed *AccountPassHashed `json:"-" gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

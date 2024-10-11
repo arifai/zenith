@@ -4,7 +4,6 @@ import (
 	"github.com/arifai/zenith/internal/model"
 	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -17,12 +16,12 @@ const defaultPassword = "12345678"
 
 // AccountMigration performs the migration of the Account and AccountPassHashed tables.
 func (m *Migration) AccountMigration() {
-	err := m.db.Transaction(func(tx *gorm.DB) error {
+	err := m.Transaction(func(tx *gorm.DB) error {
 		if err := migrateAccount(tx); err != nil {
 			return err
 		}
 
-		account := createDefaultAccount(m.id)
+		account := createDefaultAccount(m.UUID)
 		hashedPassword, err := hashDefaultPassword()
 		if err != nil {
 			return err
@@ -38,7 +37,7 @@ func (m *Migration) AccountMigration() {
 		return nil
 	})
 	if err != nil {
-		logg.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "account"), zap.Error(err))
+		m.Logger.Error(errormessage.ErrMigrationText, zap.String("migration_name", "account"), zap.Error(err))
 	}
 }
 

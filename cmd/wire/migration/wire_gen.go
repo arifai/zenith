@@ -8,13 +8,14 @@ package migration
 
 import (
 	"github.com/arifai/zenith/internal/model/migration"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
-func ProvideMigration(db *gorm.DB, id uuid.UUID) *migration.Migration {
-	migrationMigration := migration.New(db, id)
+func ProvideMigration(db *gorm.DB, id uuid.UUID, log logger.Logger) *migration.Migration {
+	migrationMigration := migration.New(db, id, log)
 	return migrationMigration
 }

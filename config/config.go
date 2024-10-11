@@ -4,7 +4,7 @@ import (
 	"aidanwoods.dev/go-paseto"
 	"github.com/Netflix/go-env"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -36,6 +36,7 @@ type (
 var (
 	SecretKey = paseto.NewV4AsymmetricSecretKey()
 	PublicKey = SecretKey.Public()
+	log       = logger.Logger{}
 )
 
 // NewConfig creates and loads a new Config instance from the environment.
@@ -47,12 +48,12 @@ func NewConfig(filenames ...string) *Config {
 // loadEnvFile loads the configuration from the provided `.env` files and environment variables.
 func loadEnvFile(filenames ...string) Config {
 	if err := godotenv.Load(filenames...); err != nil {
-		logg.Logger.Fatal(errormessage.ErrFailedToLoadEnvFileText, zap.Error(err))
+		log.Fatal(errormessage.ErrFailedToLoadEnvFileText, zap.Error(err))
 	}
 
 	var config Config
 	if _, err := env.UnmarshalFromEnviron(&config); err != nil {
-		logg.Logger.Fatal(errormessage.ErrFailedToLoadEnvVariableText, zap.Error(err))
+		log.Fatal(errormessage.ErrFailedToLoadEnvVariableText, zap.Error(err))
 	}
 
 	return config

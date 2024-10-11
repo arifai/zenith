@@ -13,6 +13,7 @@ import (
 	"github.com/arifai/zenith/internal/handler"
 	repository2 "github.com/arifai/zenith/internal/repository"
 	"github.com/arifai/zenith/internal/service"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -25,10 +26,10 @@ func ProvideHandler() *handler.Handler {
 	return handlerHandler
 }
 
-func ProvideAccountHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *handler.AccountHandler {
+func ProvideAccountHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config, log logger.Logger) *handler.AccountHandler {
 	response := common.ProvideResponse()
 	handlerHandler := handler.New(response)
-	serviceService := service.New(db, rdb, cfg)
+	serviceService := service.New(cfg, log)
 	repositoryRepository := repository.ProvideRepository(db, rdb)
 	accountRepository := repository2.NewAccountRepository(repositoryRepository)
 	accountService := service.NewAccountService(serviceService, accountRepository)
@@ -36,10 +37,10 @@ func ProvideAccountHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *
 	return accountHandler
 }
 
-func ProvideNotificationHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *handler.NotificationHandler {
+func ProvideNotificationHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config, log logger.Logger) *handler.NotificationHandler {
 	response := common.ProvideResponse()
 	handlerHandler := handler.New(response)
-	serviceService := service.New(db, rdb, cfg)
+	serviceService := service.New(cfg, log)
 	repositoryRepository := repository.ProvideRepository(db, rdb)
 	notificationRepository := repository2.NewNotificationRepository(repositoryRepository)
 	notificationService := service.NewNotificationService(serviceService, notificationRepository)

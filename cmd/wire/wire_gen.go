@@ -10,6 +10,7 @@ import (
 	"github.com/arifai/zenith/cmd/wire/handler"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/internal/middleware"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/arifai/zenith/pkg/server/http"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -18,9 +19,9 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeRouter(db *gorm.DB, redis2 *redis.Client, cfg *config.Config) *gin.Engine {
-	accountHandler := handler.ProvideAccountHandler(db, redis2, cfg)
-	notificationHandler := handler.ProvideNotificationHandler(db, redis2, cfg)
+func InitializeRouter(db *gorm.DB, redis2 *redis.Client, cfg *config.Config, log logger.Logger) *gin.Engine {
+	accountHandler := handler.ProvideAccountHandler(db, redis2, cfg, log)
+	notificationHandler := handler.ProvideNotificationHandler(db, redis2, cfg, log)
 	middlewareMiddleware := middleware.New(db, redis2)
 	strictAuthMiddleware := middleware.NewStrictAuthMiddleware(middlewareMiddleware)
 	engine := http.ProvideGinEngine(accountHandler, notificationHandler, strictAuthMiddleware)
