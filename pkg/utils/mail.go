@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/errormessage"
-	logg "github.com/arifai/zenith/pkg/logger"
+	"github.com/arifai/zenith/pkg/logger"
 	"go.uber.org/zap"
 	"html/template"
 	"net/smtp"
@@ -49,6 +49,8 @@ type emailRequest struct {
 	templateFileName string
 	data             interface{}
 }
+
+var log = logger.Logger{}
 
 // NewMailer creates a new MailerImpl instance with the provided SMTPConfig, queue size, and number of worker routines.
 func NewMailer(config config.Config, queueSize int, workers int) *MailerImpl {
@@ -107,7 +109,7 @@ func (m *MailerImpl) Worker() {
 			err = m.SendMail(email.to, email.subject, email.body)
 		}
 		if err != nil {
-			logg.Logger{}.Error(errormessage.ErrFailedSendEmailText, zap.Error(err))
+			log.Error(errormessage.ErrFailedSendEmailText, zap.Error(err))
 		}
 	}
 }
