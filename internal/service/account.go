@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"errors"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/internal/model"
@@ -10,10 +9,10 @@ import (
 	"github.com/arifai/zenith/internal/types/response"
 	"github.com/arifai/zenith/pkg/crypto"
 	"github.com/arifai/zenith/pkg/errormessage"
-	"github.com/arifai/zenith/pkg/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -55,52 +54,31 @@ func NewAccountService(service *Service, accountRepo repository.AccountRepositor
 }
 
 func (a *accountService) Register(body *request.AccountCreateRequest) (*model.Account, error) {
-	tx := a.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-		if tx.Error != nil {
-			tx.Rollback()
-		}
-	}()
-
-	accountExist, err := a.accountRepo.FindByEmail(body.Email)
+	founded, err := a.accountRepo.FindByEmail(body.Email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
 		return nil, err
 	}
-	if accountExist != nil {
-		tx.Rollback()
+
+	if founded != nil {
 		return nil, errormessage.ErrEmailAlreadyExists
 	}
 
-	passwordHash, err := generatePasswordHash(body.Password, a.config.PasswordSalt)
+	newAccount := &model.Account{FullName: body.FullName, Email: strings.ToLower(body.Email)}
+	passwordHash, err := generatePasswordHash(body.Password, a.PasswordSalt)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
-	account := &model.Account{FullName: body.FullName, Email: body.Email}
-	account.AccountPassHashed = &model.AccountPassHashed{AccountId: account.ID, PassHashed: passwordHash}
-
-	if err := a.accountRepo.Create(account); err != nil {
-		tx.Rollback()
+	if err := a.accountRepo.Create(newAccount, passwordHash); err != nil {
 		return nil, err
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
-	}
-
-	return account, nil
+	return newAccount, nil
 }
 
 func (a *accountService) Authorization(body *request.AccountAuthRequest) (*response.AccountAuthResponse, error) {
 	account, err := a.accountRepo.FindByEmail(body.Email)
 	if err != nil {
-		return nil, errormessage.ErrEmailAddressNotFound
-	} else if account == nil {
 		return nil, errormessage.ErrEmailAddressNotFound
 	}
 
@@ -114,7 +92,7 @@ func (a *accountService) Authorization(body *request.AccountAuthRequest) (*respo
 
 	parsedDeviceID, err := uuid.Parse(body.DeviceID)
 	if err != nil {
-		logger.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
+		a.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
 		return nil, errormessage.ErrInvalidDeviceIDInBody
 	}
 
@@ -145,11 +123,11 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 		return errormessage.ErrInvalidRefreshTokenInBody
 	}
 
-	if err = a.blacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
+	if err = a.accountRepo.BlacklistToken(verifyAccessToken.Jti.String(), verifyAccessToken.ExpiresAt); err != nil {
 		return err
 	}
 
-	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
+	if err = a.accountRepo.BlacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
 		return err
 	}
 
@@ -166,7 +144,7 @@ func (a *accountService) RefreshToken(body *request.AccountRefreshTokenRequest) 
 		return nil, errormessage.ErrInvalidRefreshTokenInBody
 	}
 
-	if err = a.blacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
+	if err = a.accountRepo.BlacklistToken(verifyRefreshToken.Jti.String(), verifyRefreshToken.ExpiresAt); err != nil {
 		return nil, err
 	}
 
@@ -218,7 +196,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	passwordHash, err := generatePasswordHash(body.NewPassword, a.config.PasswordSalt)
+	passwordHash, err := generatePasswordHash(body.NewPassword, a.PasswordSalt)
 	if err != nil {
 		return err
 	}
@@ -279,15 +257,4 @@ func generateToken(accountID, deviceID uuid.UUID, tokenType string, duration tim
 	}
 
 	return token, nil
-}
-
-// blacklistToken adds a token's "jti" to the blacklist with the specified expiration time in Redis.
-func (a *accountService) blacklistToken(jti string, exp time.Time) error {
-	ttl := time.Until(exp)
-
-	if err := a.redis.Set(context.Background(), jti, "blacklisted", ttl).Err(); err != nil {
-		return err
-	}
-
-	return nil
 }

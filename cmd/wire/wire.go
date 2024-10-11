@@ -6,6 +6,7 @@ import (
 	"github.com/arifai/zenith/cmd/wire/handler"
 	"github.com/arifai/zenith/cmd/wire/middleware"
 	"github.com/arifai/zenith/config"
+	"github.com/arifai/zenith/pkg/logger"
 	"github.com/arifai/zenith/pkg/server/http"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -13,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitializeRouter(db *gorm.DB, redis *redis.Client, cfg *config.Config) *gin.Engine {
+func InitializeRouter(db *gorm.DB, redis *redis.Client, cfg *config.Config, log logger.Logger) *gin.Engine {
 	wire.Build(
 		handler.ProvideAccountHandler,
 		handler.ProvideNotificationHandler,

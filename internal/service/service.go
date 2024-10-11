@@ -2,18 +2,16 @@ package service
 
 import (
 	"github.com/arifai/zenith/config"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
+	"github.com/arifai/zenith/pkg/logger"
 )
 
-// Service is a structure that holds the database, Redis client, and configuration settings for the service.
+// Service encapsulates common dependencies such as configuration and logging for use in other services.
 type Service struct {
-	db     *gorm.DB
-	redis  *redis.Client
-	config *config.Config
+	*config.Config
+	logger.Logger
 }
 
-// New initializes a new Service instance with the provided database connection, Redis client, and configuration settings.
-func New(db *gorm.DB, redis *redis.Client, config *config.Config) *Service {
-	return &Service{db: db, redis: redis, config: config}
+// New initializes a new Service instance with the provided configuration and logger.
+func New(config *config.Config, log logger.Logger) *Service {
+	return &Service{config, log}
 }
