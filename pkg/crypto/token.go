@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/google/uuid"
-	"log"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -47,13 +47,13 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 
 	publicKeyHex, err := paseto.NewV4AsymmetricPublicKeyFromHex(publicKey.ExportHex())
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedParsePublicHexText, err)
+		log.Error(errormessage.ErrFailedParsePublicHexText, zap.Error(err))
 		return nil, err
 	}
 
 	parsedToken, err := parser.ParseV4Public(publicKeyHex, token, nil)
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedParseTokenText, err)
+		log.Error(errormessage.ErrFailedParseTokenText, zap.Error(err))
 		return nil, errors.New(errormessage.ErrInvalidTokenHashText)
 	}
 
@@ -74,22 +74,22 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 
 	issuedAt, err := parsedToken.GetIssuedAt()
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedGetIATText, err)
+		log.Error(errormessage.ErrFailedGetIATText, zap.Error(err))
 		return nil, err
 	}
 
 	notBefore, err := parsedToken.GetNotBefore()
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedGetNBFText, err)
+		log.Error(errormessage.ErrFailedGetNBFText, zap.Error(err))
 		return nil, err
 	}
 
 	expiration, err := parsedToken.GetExpiration()
 	if err != nil {
-		log.Printf("%s: %v", errormessage.ErrFailedGetEXPText, err)
+		log.Error(errormessage.ErrFailedGetEXPText, zap.Error(err))
 		return nil, err
 	} else if expiration.Before(time.Now()) {
-		log.Printf("%s: %v", errormessage.ErrTokenExpiredText, err)
+		log.Error(errormessage.ErrTokenExpiredText, zap.Error(err))
 		return nil, err
 	}
 
@@ -112,13 +112,13 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 func parseUUID(getFieldFunc func() (string, error), getFieldErrMsg, parseErrMsg string) (uuid.UUID, error) {
 	fieldStr, err := getFieldFunc()
 	if err != nil {
-		log.Printf("%s: %v", getFieldErrMsg, err)
+		log.Error(getFieldErrMsg, zap.Error(err))
 		return uuid.Nil, err
 	}
 
 	fieldUUID, err := uuid.Parse(fieldStr)
 	if err != nil {
-		log.Printf("%s: %v", parseErrMsg, err)
+		log.Error(parseErrMsg, zap.Error(err))
 		return uuid.Nil, err
 	}
 
