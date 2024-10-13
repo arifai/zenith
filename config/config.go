@@ -3,8 +3,8 @@ package config
 import (
 	"aidanwoods.dev/go-paseto"
 	"github.com/Netflix/go-env"
+	"github.com/arifai/zenith/cmd/wire/logger"
 	"github.com/arifai/zenith/pkg/errormessage"
-	"github.com/arifai/zenith/pkg/logger"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -36,7 +36,7 @@ type (
 var (
 	SecretKey = paseto.NewV4AsymmetricSecretKey()
 	PublicKey = SecretKey.Public()
-	log       = logger.Logger{}
+	log       = logger.ProvideLogger()
 )
 
 // NewConfig creates and loads a new Config instance from the environment.

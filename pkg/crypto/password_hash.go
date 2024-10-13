@@ -5,8 +5,8 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"github.com/arifai/zenith/cmd/wire/logger"
 	"github.com/arifai/zenith/pkg/errormessage"
-	"github.com/arifai/zenith/pkg/logger"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/argon2"
 	"strings"
@@ -25,7 +25,7 @@ type Argon2IdHash struct {
 // memory, threads, key length, and salt length. Reference: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
 var (
 	DefaultArgon2IDHash = &Argon2IdHash{Time: 2, Memory: 19 * 1024, Threads: 1, KeyLen: 32, SaltLen: 32}
-	log                 = logger.Logger{}
+	log                 = logger.ProvideLogger()
 )
 
 // Argon2Version is the version of the argon2 algorithm

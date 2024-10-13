@@ -3,9 +3,9 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"github.com/arifai/zenith/cmd/wire/logger"
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/errormessage"
-	"github.com/arifai/zenith/pkg/logger"
 	"go.uber.org/zap"
 	"html/template"
 	"net/smtp"
@@ -50,7 +50,7 @@ type emailRequest struct {
 	data             interface{}
 }
 
-var log = logger.Logger{}
+var log = logger.ProvideLogger()
 
 // NewMailer creates a new MailerImpl instance with the provided SMTPConfig, queue size, and number of worker routines.
 func NewMailer(config config.Config, queueSize int, workers int) *MailerImpl {
