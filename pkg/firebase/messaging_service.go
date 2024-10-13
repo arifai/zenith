@@ -3,13 +3,13 @@ package firebase
 import (
 	"context"
 	"firebase.google.com/go/v4/messaging"
-	"github.com/arifai/zenith/pkg/logger"
+	"github.com/arifai/zenith/cmd/wire/logger"
 	"go.uber.org/zap"
 )
 
 type MessagingService struct{ *Messaging }
 
-var log = logger.Logger{}
+var log = logger.ProvideLogger()
 
 func NewMessagingService(messaging *Messaging) *MessagingService {
 	return &MessagingService{messaging}

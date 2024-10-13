@@ -131,7 +131,7 @@ func (a *accountService) Unauthorization(body *request.AccountUnauthRequest) err
 		return err
 	}
 
-	if err = a.accountRepo.UnsetFCMToken(verifyAccessToken.AccountId); err != nil {
+	if err = a.accountRepo.UnsetFCMToken(verifyAccessToken.AccountID); err != nil {
 		return err
 	}
 
@@ -148,12 +148,12 @@ func (a *accountService) RefreshToken(body *request.AccountRefreshTokenRequest) 
 		return nil, err
 	}
 
-	accessToken, err := generateToken(verifyRefreshToken.AccountId, verifyRefreshToken.DeviceID, crypto.AccessToken, time.Hour*6)
+	accessToken, err := generateToken(verifyRefreshToken.AccountID, verifyRefreshToken.DeviceID, crypto.AccessToken, time.Hour*6)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := generateToken(verifyRefreshToken.AccountId, verifyRefreshToken.DeviceID, crypto.RefreshToken, time.Hour*24*30)
+	refreshToken, err := generateToken(verifyRefreshToken.AccountID, verifyRefreshToken.DeviceID, crypto.RefreshToken, time.Hour*24*30)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (a *accountService) Update(id *uuid.UUID, body *request.AccountUpdateReques
 	}
 
 	account.FullName = body.FullName
-	account.Email = body.Email
+	account.Email = strings.ToLower(body.Email)
 
 	if err := a.accountRepo.Update(account); err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	account.AccountPassHashed = &model.AccountPassHashed{AccountId: account.ID, PassHashed: passwordHash}
+	account.AccountPassHashed = model.AccountPassHashed{AccountID: account.ID, PassHashed: passwordHash}
 
 	if err := a.accountRepo.UpdatePassword(account); err != nil {
 		return err
@@ -240,7 +240,7 @@ func generateToken(accountID, deviceID uuid.UUID, tokenType string, duration tim
 	payload := crypto.TokenPayload{
 		Jti:       uuid.New(),
 		DeviceID:  deviceID,
-		AccountId: accountID,
+		AccountID: accountID,
 		IssuedAt:  now,
 		NotBefore: now,
 		ExpiresAt: now.Add(duration),

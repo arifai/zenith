@@ -12,7 +12,7 @@ import (
 // TokenPayload represents the payload data structure embedded in a token.
 type TokenPayload struct {
 	Jti       uuid.UUID
-	AccountId uuid.UUID
+	AccountID uuid.UUID
 	DeviceID  uuid.UUID
 	IssuedAt  time.Time
 	NotBefore time.Time
@@ -30,7 +30,7 @@ func (t *TokenPayload) GenerateToken(secretKey paseto.V4AsymmetricSecretKey) str
 	token := paseto.NewToken()
 	token.SetAudience(t.DeviceID.String())
 	token.SetJti(t.Jti.String())
-	token.SetSubject(t.AccountId.String())
+	token.SetSubject(t.AccountID.String())
 	token.SetIssuedAt(t.IssuedAt)
 	token.SetNotBefore(t.NotBefore)
 	token.SetExpiration(t.ExpiresAt)
@@ -67,7 +67,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 		return nil, err
 	}
 
-	accountId, err := parseUUID(parsedToken.GetSubject, errormessage.ErrFailedGetSubText, errormessage.ErrFailedParseACIText)
+	accountID, err := parseUUID(parsedToken.GetSubject, errormessage.ErrFailedGetSubText, errormessage.ErrFailedParseACIText)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	tokenPayload := &TokenPayload{
 		Jti:       jti,
 		DeviceID:  aud,
-		AccountId: accountId,
+		AccountID: accountID,
 		IssuedAt:  issuedAt,
 		NotBefore: notBefore,
 		ExpiresAt: expiration,

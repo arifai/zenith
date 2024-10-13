@@ -11,21 +11,20 @@ func AccountRouter(group *gin.RouterGroup, accountHandler *handler.AccountHandle
 	accountAuthGroup := group.Group("/auth/account")
 	accountGroup := group.Group("/account", middleware.StrictAuth())
 	meGroup := accountGroup.Group("/me")
-	updateGroup := meGroup.Group("/update")
 
-	setupAccountAuthRoutes := func(g *gin.RouterGroup) {
-		accountAuthGroup.POST("/registration", accountHandler.Register)
-		accountAuthGroup.POST("/authorization", accountHandler.Authorization)
-		accountAuthGroup.POST("/refresh", accountHandler.RefreshToken)
-		accountAuthGroup.POST("/unauthorization", middleware.StrictAuth(), accountHandler.Unauthorization)
-	}
+	setupAccountAuthRoutes(accountAuthGroup, accountHandler, middleware)
+	setupAccountRoutes(meGroup, accountHandler)
+}
 
-	setupAccountRoutes := func(g *gin.RouterGroup) {
-		meGroup.GET("", accountHandler.GetCurrent)
-		updateGroup.PUT("", accountHandler.Update)
-		updateGroup.PUT("/password", accountHandler.UpdatePassword)
-	}
+func setupAccountAuthRoutes(g *gin.RouterGroup, accountHandler *handler.AccountHandler, middleware *middleware.StrictAuthMiddleware) {
+	g.POST("/registration", accountHandler.Register)
+	g.POST("/authorization", accountHandler.Authorization)
+	g.POST("/refresh", accountHandler.RefreshToken)
+	g.POST("/unauthorization", middleware.StrictAuth(), accountHandler.Unauthorization)
+}
 
-	setupAccountAuthRoutes(accountAuthGroup)
-	setupAccountRoutes(accountGroup)
+func setupAccountRoutes(g *gin.RouterGroup, accountHandler *handler.AccountHandler) {
+	g.GET("", accountHandler.GetCurrent)
+	g.PUT("/update", accountHandler.Update)
+	g.Group("/update").PUT("/password", accountHandler.UpdatePassword)
 }

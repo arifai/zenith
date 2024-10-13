@@ -16,7 +16,7 @@ type (
 	// PushNotification represents a system or application event message that can be presented to users.
 	PushNotification struct {
 		ID        uuid.UUID         `json:"id" gorm:"not null;primaryKey;type:uuid;default:uuid_generate_v4()"`
-		AccountId uuid.UUID         `json:"account_id" gorm:"not null;column:account_id;type:uuid;index:idx_push_notification_account_id,hash"`
+		AccountID uuid.UUID         `json:"account_id" gorm:"not null;column:account_id;type:uuid;index:idx_push_notification_account_id,hash"`
 		Title     string            `json:"title" gorm:"not null;column:title;type:varchar"`
 		Message   string            `json:"message" gorm:"not null;column:message;type:varchar"`
 		Image     string            `json:"image" gorm:"column:image;type:varchar"`

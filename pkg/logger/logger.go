@@ -38,7 +38,7 @@ func New() Logger {
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.InfoLevel && lvl < zapcore.ErrorLevel
+		return lvl >= zapcore.DebugLevel && lvl <= zapcore.WarnLevel
 	})
 	errorLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.ErrorLevel
