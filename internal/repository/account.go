@@ -52,7 +52,7 @@ func (a *accountRepository) Create(account *model.Account, hashedPassword string
 			return err
 		}
 
-		accountPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: hashedPassword}
+		accountPassHashed := &model.AccountPassHashed{AccountID: account.ID, PassHashed: hashedPassword}
 		if err := tx.Create(accountPassHashed).Error; err != nil {
 			return err
 		}

@@ -26,7 +26,7 @@ func (m *Migration) AccountMigration() {
 		if err != nil {
 			return err
 		}
-		accountPassHashed := &model.AccountPassHashed{AccountId: account.ID, PassHashed: hashedPassword}
+		accountPassHashed := &model.AccountPassHashed{AccountID: account.ID, PassHashed: hashedPassword}
 
 		if err := updateOrInsertRecord(tx, &account, "email = ?", account.Email); err != nil {
 			return err
