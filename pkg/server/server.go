@@ -19,19 +19,15 @@ import (
 	"os"
 )
 
-const (
-	serverAddress    = ":8080"
-	trustedProxyAddr = "127.0.0.1"
-)
-
 var log = logger.ProvideLogger()
 
 // Run initializes the environment and starts the server, logging errors if the server initialization fails.
 func Run() {
 	fmt.Println(banner())
 	log.Info("Starting server")
+	initializeConfig := cfg.ProvideConfig()
 
-	tp, err := tracer.InitTracer()
+	tp, err := tracer.InitTracer(initializeConfig)
 	if err != nil {
 		log.Error("Failed to initialize tracer", zap.Error(err))
 		return
@@ -43,7 +39,6 @@ func Run() {
 		}
 	}()
 
-	initializeConfig := cfg.ProvideConfig()
 	if err := initializeAndRunServer(initializeConfig); err != nil {
 		log.Error(errormessage.ErrInitializingServerText, zap.Error(err))
 	}
@@ -98,9 +93,11 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 	utils.SetupTranslation()
 	rtr := wire.InitializeRouter(db, rdb, config, log)
 
-	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
+	if err := rtr.SetTrustedProxies([]string{config.AppHost}); err != nil {
 		return fmt.Errorf(errormessage.ErrFailedSetTrustedProxiesText+"%v", err)
 	}
+
+	serverAddress := fmt.Sprintf("%s:%s", config.AppHost, config.AppPort)
 
 	if err := rtr.Run(serverAddress); err != nil {
 		return err

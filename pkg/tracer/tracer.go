@@ -1,36 +1,30 @@
 package tracer
 
 import (
+	"github.com/arifai/zenith/config"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"gopkg.in/natefinch/lumberjack.v2"
+	"time"
 )
 
 // InitTracer initializes the tracer provider and returns it.
-func InitTracer() (*sdktrace.TracerProvider, error) {
-	rotatingLogFile := &lumberjack.Logger{
-		Filename:   "trace.log",
-		MaxSize:    20,
-		MaxBackups: 5,
-		MaxAge:     30,
-		Compress:   true,
-		LocalTime:  true,
-	}
+func InitTracer(config *config.Config) (*sdktrace.TracerProvider, error) {
 
-	exporter, err := stdouttrace.New(stdouttrace.WithWriter(rotatingLogFile), stdouttrace.WithPrettyPrint())
+	exporter, err := zipkin.New(config.ZipkinURL)
 	if err != nil {
 		return nil, err
 	}
 
-	sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.05))
-
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sampler),
+		sdktrace.WithBatcher(
+			exporter,
+			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
+			sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
+		),
 		sdktrace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceInstanceIDKey.String(uuid.NewString()),

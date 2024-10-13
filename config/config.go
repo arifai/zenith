@@ -12,6 +12,8 @@ import (
 type (
 	// Config contains configuration settings loaded from environment variables.
 	Config struct {
+		AppHost          string `env:"APP_HOST"`
+		AppPort          string `env:"APP_PORT"`
 		Debug            bool   `env:"DEBUG"`
 		DatabaseHost     string `env:"DB_HOST"`
 		DatabasePort     string `env:"DB_PORT"`
@@ -30,6 +32,7 @@ type (
 		RedisDatabase    int    `env:"REDIS_DB"`
 		RedisUsername    string `env:"REDIS_USERNAME"`
 		RedisPassword    string `env:"REDIS_PASSWORD"`
+		ZipkinURL        string `env:"ZIPKIN_URL"`
 	}
 )
 
