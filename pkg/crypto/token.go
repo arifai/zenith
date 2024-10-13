@@ -67,7 +67,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 		return nil, err
 	}
 
-	accountId, err := parseUUID(parsedToken.GetSubject, errormessage.ErrFailedGetSubText, errormessage.ErrFailedParseACIText)
+	accountID, err := parseUUID(parsedToken.GetSubject, errormessage.ErrFailedGetSubText, errormessage.ErrFailedParseACIText)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func VerifyToken(token string, publicKey paseto.V4AsymmetricPublicKey) (*TokenPa
 	tokenPayload := &TokenPayload{
 		Jti:       jti,
 		DeviceID:  aud,
-		AccountID: accountId,
+		AccountID: accountID,
 		IssuedAt:  issuedAt,
 		NotBefore: notBefore,
 		ExpiresAt: expiration,
