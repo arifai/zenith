@@ -201,7 +201,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	account.AccountPassHashed = &model.AccountPassHashed{AccountID: account.ID, PassHashed: passwordHash}
+	account.AccountPassHashed = model.AccountPassHashed{AccountID: account.ID, PassHashed: passwordHash}
 
 	if err := a.accountRepo.UpdatePassword(account); err != nil {
 		return err
