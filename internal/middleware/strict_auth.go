@@ -76,7 +76,7 @@ func (s *StrictAuthMiddleware) validateAndExtractAccount(ctx *gin.Context) (*uui
 		return nil, errormessage.ErrInvalidAccessToken
 	}
 
-	return &tokenPayload.AccountId, nil
+	return &tokenPayload.AccountID, nil
 }
 
 // extractToken splits the authorization header to extract the token.
