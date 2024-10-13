@@ -177,7 +177,7 @@ func (a *accountService) Update(id *uuid.UUID, body *request.AccountUpdateReques
 	}
 
 	account.FullName = body.FullName
-	account.Email = body.Email
+	account.Email = strings.ToLower(body.Email)
 
 	if err := a.accountRepo.Update(account); err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	account.AccountPassHashed = &model.AccountPassHashed{AccountId: account.ID, PassHashed: passwordHash}
+	account.AccountPassHashed = &model.AccountPassHashed{AccountID: account.ID, PassHashed: passwordHash}
 
 	if err := a.accountRepo.UpdatePassword(account); err != nil {
 		return err
