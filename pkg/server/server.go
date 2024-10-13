@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/arifai/zenith/cmd/wire"
 	cfg "github.com/arifai/zenith/cmd/wire/config"
@@ -9,6 +10,7 @@ import (
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/database"
 	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/tracer"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -28,6 +30,19 @@ var log = logger.ProvideLogger()
 func Run() {
 	fmt.Println(banner())
 	log.Info("Starting server")
+
+	tp, err := tracer.InitTracer()
+	if err != nil {
+		log.Error("Failed to initialize tracer", zap.Error(err))
+		return
+	}
+
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Error("Failed to shutdown tracer provider", zap.Error(err))
+		}
+	}()
+
 	initializeConfig := cfg.ProvideConfig()
 	if err := initializeAndRunServer(initializeConfig); err != nil {
 		log.Error(errormessage.ErrInitializingServerText, zap.Error(err))

@@ -7,6 +7,7 @@ import (
 	"github.com/arifai/zenith/pkg/errormessage"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"io"
@@ -21,7 +22,7 @@ type (
 
 	// ResponseModel represents the structure of the response returned by the API.
 	ResponseModel struct {
-		Code    int            `json:"code"`
+		TraceID string         `json:"trace_id"`
 		Message string         `json:"message"`
 		Errors  []utils.IError `json:"errors"`
 		Result  any            `json:"result"`
@@ -50,10 +51,16 @@ func NewResponse() *Response {
 	return &Response{}
 }
 
+// extractTraceID extracts the trace ID from the context.
+func (r Response) extractTraceID(c *gin.Context) string {
+	span := trace.SpanFromContext(c.Request.Context())
+	return span.SpanContext().TraceID().String()
+}
+
 // New sets the response format and sends a JSON response with HTTP code, message, errormessage, and result data.
 func (r Response) New(c *gin.Context, code int, message string, errors []utils.IError, result interface{}) {
 	c.JSON(code, ResponseModel{
-		Code:    code,
+		TraceID: r.extractTraceID(c),
 		Message: message,
 		Errors:  errors,
 		Result:  result,
@@ -73,7 +80,7 @@ func NewEntries[T interface{}](entries []T, count int64, page, totalPages int) *
 // Success sets a JSON success response with HTTP status 200 and the provided result data.
 func (r Response) Success(c *gin.Context, result interface{}) {
 	c.JSON(http.StatusOK, ResponseModel{
-		Code:    http.StatusOK,
+		TraceID: r.extractTraceID(c),
 		Message: "Successful",
 		Errors:  []utils.IError{},
 		Result:  result,
@@ -83,7 +90,7 @@ func (r Response) Success(c *gin.Context, result interface{}) {
 // Created sets a JSON response with HTTP status 201, providing a message and the result data.
 func (r Response) Created(c *gin.Context, message string, result interface{}) {
 	c.JSON(http.StatusCreated, ResponseModel{
-		Code:    http.StatusCreated,
+		TraceID: r.extractTraceID(c),
 		Message: utils.CapitalizeFirstLetter(message),
 		Errors:  []utils.IError{},
 		Result:  result,
@@ -93,7 +100,7 @@ func (r Response) Created(c *gin.Context, message string, result interface{}) {
 // Authorized sends an HTTP 202 Accepted response with the given authentication result.
 func (r Response) Authorized(c *gin.Context, result *response.AccountAuthResponse) {
 	c.JSON(http.StatusAccepted, ResponseModel{
-		Code:    http.StatusAccepted,
+		TraceID: r.extractTraceID(c),
 		Message: "Authorized",
 		Errors:  []utils.IError{},
 		Result:  result,
@@ -103,7 +110,7 @@ func (r Response) Authorized(c *gin.Context, result *response.AccountAuthRespons
 // Unauthorized sends an HTTP 401 Unauthorized response with a custom message and a list of errormessage.
 func (r Response) Unauthorized(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusUnauthorized, ResponseModel{
-		Code:    http.StatusUnauthorized,
+		TraceID: r.extractTraceID(c),
 		Message: utils.CapitalizeFirstLetter(message),
 		Errors:  errors,
 		Result:  nil,
@@ -136,7 +143,7 @@ func (r Response) Error(c *gin.Context, errParam interface{}) {
 // BadRequest sends an HTTP 400 Bad Request response with a custom message and a list of errormessage.
 func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message string) {
 	c.JSON(http.StatusBadRequest, ResponseModel{
-		Code:    http.StatusBadRequest,
+		TraceID: r.extractTraceID(c),
 		Message: utils.CapitalizeFirstLetter(message),
 		Errors:  errors,
 		Result:  nil,
@@ -146,7 +153,7 @@ func (r Response) BadRequest(c *gin.Context, errors []utils.IError, message stri
 // InternalServerError sends an HTTP 500 Internal Server Error response with a custom message and an empty list of errormessage.
 func (r Response) InternalServerError(c *gin.Context, message string) {
 	c.JSON(http.StatusInternalServerError, ResponseModel{
-		Code:    http.StatusInternalServerError,
+		TraceID: r.extractTraceID(c),
 		Message: utils.CapitalizeFirstLetter(message),
 		Errors:  []utils.IError{},
 		Result:  nil,
@@ -156,7 +163,7 @@ func (r Response) InternalServerError(c *gin.Context, message string) {
 // NotFound is a handler function that responds with a '404 Not Found' status and a formatted message using JSON.
 func (r Response) NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, ResponseModel{
-		Code:    http.StatusNotFound,
+		TraceID: r.extractTraceID(c),
 		Message: utils.CapitalizeFirstLetter(message),
 		Errors:  []utils.IError{},
 		Result:  nil,

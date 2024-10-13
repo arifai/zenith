@@ -2,4 +2,5 @@
 .idea
 info.log
 error.log
+trace.log
 firebase_service_account_key.json
