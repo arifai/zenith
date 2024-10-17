@@ -54,6 +54,7 @@ func NewAccountService(service *Service, accountRepo repository.AccountRepositor
 }
 
 func (a *accountService) Register(body *request.AccountCreateRequest) (*model.Account, error) {
+
 	founded, err := a.accountRepo.FindByEmail(body.Email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -64,7 +65,7 @@ func (a *accountService) Register(body *request.AccountCreateRequest) (*model.Ac
 	}
 
 	newAccount := &model.Account{FullName: body.FullName, Email: strings.ToLower(body.Email)}
-	passwordHash, err := generatePasswordHash(body.Password, a.PasswordSalt)
+	passwordHash, err := generatePasswordHash(body.Password, a.config.PasswordSalt)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (a *accountService) Authorization(body *request.AccountAuthRequest) (*respo
 
 	parsedDeviceID, err := uuid.Parse(body.DeviceID)
 	if err != nil {
-		a.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
+		a.log.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", body.DeviceID), zap.Error(err))
 		return nil, errormessage.ErrInvalidDeviceIDInBody
 	}
 
@@ -196,7 +197,7 @@ func (a *accountService) UpdatePassword(id *uuid.UUID, body *request.AccountUpda
 		return err
 	}
 
-	passwordHash, err := generatePasswordHash(body.NewPassword, a.PasswordSalt)
+	passwordHash, err := generatePasswordHash(body.NewPassword, a.config.PasswordSalt)
 	if err != nil {
 		return err
 	}

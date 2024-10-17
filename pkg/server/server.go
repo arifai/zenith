@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/arifai/zenith/cmd/wire"
 	cfg "github.com/arifai/zenith/cmd/wire/config"
@@ -9,17 +10,13 @@ import (
 	"github.com/arifai/zenith/config"
 	"github.com/arifai/zenith/pkg/database"
 	"github.com/arifai/zenith/pkg/errormessage"
+	"github.com/arifai/zenith/pkg/tracer"
 	"github.com/arifai/zenith/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
-)
-
-const (
-	serverAddress    = ":8080"
-	trustedProxyAddr = "127.0.0.1"
 )
 
 var log = logger.ProvideLogger()
@@ -29,6 +26,19 @@ func Run() {
 	fmt.Println(banner())
 	log.Info("Starting server")
 	initializeConfig := cfg.ProvideConfig()
+
+	tp, err := tracer.InitTracer(initializeConfig)
+	if err != nil {
+		log.Error("Failed to initialize tracer", zap.Error(err))
+		return
+	}
+
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Error("Failed to shutdown tracer provider", zap.Error(err))
+		}
+	}()
+
 	if err := initializeAndRunServer(initializeConfig); err != nil {
 		log.Error(errormessage.ErrInitializingServerText, zap.Error(err))
 	}
@@ -83,9 +93,11 @@ func setupRouter(db *gorm.DB, rdb *redis.Client, config *config.Config) error {
 	utils.SetupTranslation()
 	rtr := wire.InitializeRouter(db, rdb, config, log)
 
-	if err := rtr.SetTrustedProxies([]string{trustedProxyAddr}); err != nil {
+	if err := rtr.SetTrustedProxies([]string{config.AppHost}); err != nil {
 		return fmt.Errorf(errormessage.ErrFailedSetTrustedProxiesText+"%v", err)
 	}
+
+	serverAddress := fmt.Sprintf("%s:%s", config.AppHost, config.AppPort)
 
 	if err := rtr.Run(serverAddress); err != nil {
 		return err

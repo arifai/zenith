@@ -51,7 +51,7 @@ func (s *notificationService) GetList(id *uuid.UUID, paging *common.Pagination) 
 func (s *notificationService) MarkAsRead(id string) (founded bool, err error) {
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		s.Logger.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", id), zap.Error(err))
+		s.log.Error(errormessage.ErrFailedToParseUUIDText, zap.String("input", id), zap.Error(err))
 		return
 	}
 	return s.notificationRepo.MarkAsRead(parsedID)
